@@ -1,0 +1,192 @@
+[ccpp-arg-table]
+  name = gsd_chem_diag_wrapper_init
+  type = scheme
+
+########################################################################
+[ccpp-arg-table]
+  name = gsd_chem_diag_wrapper_finalize
+  type = scheme
+
+########################################################################
+[ccpp-arg-table]
+  name = gsd_chem_diag_wrapper_run
+  type = scheme
+[im]
+  standard_name = horizontal_dimension
+  long_name = horizontal dimension
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[kte]
+  standard_name = vertical_dimension
+  long_name = vertical layer dimension
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[kme]
+  standard_name = vertical_dimension_plus_one
+  long_name = number of vertical levels plus one
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[ktau]
+  standard_name = index_of_time_step
+  long_name = current forecast iteration
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[pr3d]
+  standard_name = air_pressure_at_interface
+  long_name = air pressure at model layer interfaces
+  units = Pa
+  dimensions = (horizontal_dimension,vertical_dimension_plus_one)
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[ntrac]
+  standard_name = number_of_tracers
+  long_name = number of tracers
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[ntso2]
+  standard_name = index_for_so2
+  long_name = tracer index for so2
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[gq0]
+  standard_name = tracer_concentration_updated_by_physics
+  long_name = tracer concentration updated by physics
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[tile_num]
+  standard_name = number_of_tile
+  long_name = tile number
+  units = none
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[tmpmax]
+  standard_name = maximum_temperature_at_2m
+  long_name = max temperature at 2m height
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[tmpmin]
+  standard_name = minimum_temperature_at_2m
+  long_name = min temperature at 2m height
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[spfhmax]
+  standard_name = maximum_specific_humidity_at_2m
+  long_name = maximum specific humidity at 2m height
+  units = kg kg-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[spfhmin]
+  standard_name = minimum_specific_humidity_at_2m
+  long_name = minimum specific humidity at 2m height
+  units = kg kg-1
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[t2m]
+  standard_name = temperature_at_2m
+  long_name = 2 meter temperature
+  units = K
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[ntchmdiag]
+  standard_name = number_of_chemical_tracers_for_diagnostics
+  long_name = number of chemical tracers for diagnostic output
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[nseasalt]
+  standard_name = number_of_seasalt_bins_for_diagnostics
+  long_name = number of seasalt bins for diagnostics
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[drydep]
+  standard_name = instantaneous_dry_deposition
+  long_name = instantaneous dry deposition
+  units = kg m-2 s-1
+  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[wetdpl]
+  standard_name = instantaneous_large_scale_wet_deposition
+  long_name = instantaneous large-scale wet deposition
+  units = kg m-2 s-1
+  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[ssem]
+  standard_name = instantaneous_seasalt_emission_flux
+  long_name = instantaneous sea salt emission flux
+  units = kg m-2 s-1
+  dimensions = (horizonal_dimension,number_of_seasalt_bins_for_diagnostics)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[errmsg]
+  standard_name = ccpp_error_message
+  long_name = error message for error handling in CCPP
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=*
+  intent = out
+  optional = F
+[errflg]
+  standard_name = ccpp_error_flag
+  long_name = error flag for error handling in CCPP
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = out
+  optional = F

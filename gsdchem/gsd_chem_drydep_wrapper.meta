@@ -1,15 +1,15 @@
 [ccpp-arg-table]
-  name = gsd_chem_driver_init
+  name = gsd_chem_drydep_wrapper_init
   type = scheme
 
 ########################################################################
 [ccpp-arg-table]
-  name = gsd_chem_driver_finalize
+  name = gsd_chem_drydep_wrapper_finalize
   type = scheme
 
 ########################################################################
 [ccpp-arg-table]
-  name = gsd_chem_driver_run
+  name = gsd_chem_drydep_wrapper_run
   type = scheme
 [im]
   standard_name = horizontal_dimension
@@ -52,39 +52,12 @@
   kind = kind_phys
   intent = in
   optional = F
-[garea]
-  standard_name = cell_area
-  long_name = grid cell area
-  units = m2
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
 [land]
   standard_name = sea_land_ice_mask
   long_name = landmask: sea/land/ice=0/1/2
   units = flag
   dimensions = (horizontal_dimension)
   type = integer
-  intent = in
-  optional = F
-[u10m]
-  standard_name = x_wind_at_10m
-  long_name = 10 meter u wind speed
-  units = m s-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[v10m]
-  standard_name = y_wind_at_10m
-  long_name = 10 meter v wind speed
-  units = m s-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
   intent = in
   optional = F
 [ustar]
@@ -99,7 +72,7 @@
 [rlat]
   standard_name = latitude
   long_name = latitude
-  units = radian
+  units = radians
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -108,7 +81,7 @@
 [rlon]
   standard_name = longitude
   long_name = longitude
-  units = radian
+  units = radians
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -128,24 +101,6 @@
   long_name = julian day
   units = days
   dimensions = ()
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[xcosz]
-  standard_name = instantaneous_cosine_of_zenith_angle
-  long_name = cosine of zenith angle at current time
-  units = none
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[rain_cpl]
-  standard_name = lwe_thickness_of_precipitation_amount_for_coupling
-  long_name = total rain precipitation
-  units = m
-  dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
   intent = in
@@ -222,24 +177,6 @@
   kind = kind_phys
   intent = inout
   optional = F
-[us3d]
-  standard_name = x_wind_updated_by_physics
-  long_name = updated x-direction wind
-  units = m s-1
-  dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[vs3d]
-  standard_name = y_wind_updated_by_physics
-  long_name = updated y-direction wind
-  units = m s-1
-  dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
 [spechum]
   standard_name = water_vapor_specific_humidity_updated_by_physics
   long_name = water vapor specific humidity updated by physics
@@ -248,15 +185,6 @@
   type = real
   kind = kind_phys
   intent = inout
-  optional = F
-[w]
-  standard_name = omega
-  long_name = layer mean vertical velocity
-  units = Pa s-1
-  dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-  intent = in
   optional = F
 [exch]
   standard_name = instantaneous_atmosphere_heat_diffusivity
@@ -267,43 +195,9 @@
   kind = kind_phys
   intent = in
   optional = F
-[dqdt]
-  standard_name = instantaneous_water_vapor_specific_humidity_tendency_due_to_convection
-  long_name = instantaneous moisture tendency due to convection
-  units = kg kg-1 s-1
-  dimensions = (horizontal_dimension,vertical_dimension)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[nsoil]
-  standard_name = soil_vertical_dimension
-  long_name = soil vertical layer dimension
-  units = count
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[smc]
-  standard_name = volume_fraction_of_soil_moisture
-  long_name = volumetric fraction of soil moisture
-  units = frac
-  dimensions = (horizontal_dimension,soil_vertical_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
 [vegtype]
   standard_name = vegetation_type_classification
   long_name = vegetation type at each grid cell
-  units = index
-  dimensions = (horizontal_dimension)
-  type = integer
-  intent = in
-  optional = F
-[soiltyp]
-  standard_name = soil_type_classification
-  long_name = soil type at each grid cell
   units = index
   dimensions = (horizontal_dimension)
   type = integer
@@ -359,75 +253,6 @@
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
-  intent = in
-  optional = F
-[dust_in]
-  standard_name = fengsha_dust_input
-  long_name = fengsha dust input
-  units = various
-  dimensions = (horizontal_dimension,5)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[emi_in]
-  standard_name = anthropogenic_background_input
-  long_name = anthropogenic background input
-  units = various
-  dimensions = (horizontal_dimension,10)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[emi2_in]
-  standard_name = anthropogenic_background_3d_input
-  long_name = anthropogenic background 3d input
-  units = various
-  dimensions = (horizontal_dimension,vertical_dimension,3)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[fire_GBBEPx]
-  standard_name = emission_fire_GBBEPx
-  long_name = emission fire GBBEPx
-  units = various
-  dimensions = (horizontal_dimension,5)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[fire_MODIS]
-  standard_name = emission_fire_MODIS
-  long_name = emission fire MODIS
-  units = various
-  dimensions = (horizontal_dimension,13)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[nseasalt]
-  standard_name = number_of_seasalt_bins_for_diagnostics
-  long_name = number of seasalt bins for diagnostics
-  units = count
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[ndust]
-  standard_name = number_of_dust_bins_for_diagnostics
-  long_name = number of dust bins for diagnostics
-  units = count
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[ntchmdiag]
-  standard_name = number_of_chemical_tracers_for_diagnostics
-  long_name = number of chemical tracers for diagnostic output
-  units = count
-  dimensions = ()
-  type = integer
   intent = in
   optional = F
 [ntrac]
@@ -598,65 +423,19 @@
   type = integer
   intent = in
   optional = F
-[duem]
-  standard_name = instantaneous_dust_emission_flux
-  long_name = instantaneous dust emission flux
-  units = kg m-2 s-1
-  dimensions = (horizontal_dimension,number_of_dust_bins_for_diagnostics)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[ssem]
-  standard_name = instantaneous_seasalt_emission_flux
-  long_name = instantaneous sea salt emission flux
-  units = kg m-2 s-1
-  dimensions = (horizontal_dimension,number_of_seasalt_bins_for_diagnostics)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[abem]
-  standard_name = instantaneous_anthopogenic_and_biomass_burning_emissions
-  long_name = instantaneous anthopogenic and biomass burning emissions for black carbon, organic carbon, and sulfur dioxide
-  units = ug m-2 s-1
-  dimensions = (horizontal_dimension,6)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[aecm]
-  standard_name = instantaneous_aerosol_column_mass_densities
-  long_name = instantaneous aerosol column mass densities for pm2.5, black carbon, organic carbon, sulfate, dust, sea salt
-  units = g m-2
-  dimensions = (horizontal_dimension,6)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[sedimio]
-  standard_name = instantaneous_sedimentation
-  long_name = instantaneous sedimentation
-  units = kg m-2 s-1
-  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
-  type = real
-  kind = kind_phys
-  intent = inout
+[ntchmdiag]
+  standard_name = number_of_chemical_tracers_for_diagnostics
+  long_name = number of chemical tracers for diagnostic output
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
   optional = F
 [drydep]
   standard_name = instantaneous_dry_deposition
   long_name = instantaneous dry deposition
   units = kg m-2 s-1
-  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[wetdpl]
-  standard_name = instantaneous_large_scale_wet_deposition
-  long_name = instantaneous large-scale wet deposition
-  units = kg m-2 s-1
-  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
+  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
   type = real
   kind = kind_phys
   intent = inout
@@ -670,11 +449,11 @@
   kind = kind_phys
   intent = inout
   optional = F
-[ebu]
-  standard_name = chem_buffer_ebu
-  long_name = chemistry buffer of ebu
-  units = various
-  dimensions = (horizontal_dimension,vertical_dimension_plus_one,1,7)
+[qgrs]
+  standard_name = tracer_concentration
+  long_name = model layer mean tracer concentration
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension,number_of_tracers)
   type = real
   kind = kind_phys
   intent = inout
@@ -685,170 +464,6 @@
   units = none
   dimensions = ()
   type = integer
-  intent = in
-  optional = F
-[lmk]
-  standard_name = adjusted_vertical_layer_dimension_for_radiation
-  long_name = number of vertical layers for radiation
-  units = count
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[faersw_cpl]
-  standard_name = gsdchem_aerosol_optical_properties_for_shortwave_bands_01_14
-  long_name = gsdchem aerosol optical properties for shortwave bands 01-14
-  units = various
-  dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation,14,3)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[chem_opt_in]
-  standard_name = gsd_chem_option
-  long_name = gsd chem option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[kemit_in]
-  standard_name = k_emit_dry_dep
-  long_name = gsd chem k emit dimention for dry deoposition
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[dust_opt_in]
-  standard_name = gsd_chem_dust_opt
-  long_name = gsd chem dust chem option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[dmsemis_opt_in]
-  standard_name = gsd_chem_dms_emis_opt
-  long_name = gsd chem dms emission option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[seas_opt_in]
-  standard_name = gsd_chem_sea_salt_opt
-  long_name = gsd chem sea salt emission option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[biomass_burn_opt_in]
-  standard_name = gsd_chem_biomass_burn_opt
-  long_name = gsd chem biomass burning option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[plumerise_flag_in]
-  standard_name = gsd_chem_plumerise_flag
-  long_name = gsd chem plumerise flag
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[plumerisefire_frq_in]
-  standard_name = gsd_chem_plumerisefire_frq
-  long_name = gsd chem plumerise fire frequency
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[chem_conv_tr_in]
-  standard_name = gsd_chem_conv_tr
-  long_name = gsd chem convective transport option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[dust_alpha_in]
-  standard_name = gsd_chem_dust_alpha
-  long_name = fengsha dust alpha
-  units = none
-  dimensions = ()
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[dust_gamma_in]
-  standard_name = gsd_chem_dust_gamma
-  long_name = fengsha dust gamma
-  units = none
-  dimensions = ()
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[dust_uthres_in]
-  standard_name = gsd_chem_dust_uthres
-  long_name = fengsha dust velocity threshold
-  units = none
-  dimensions = (13)
-  type = real
-  kind = kind_phys
-  intent = in
-  optional = F
-[aer_ra_feedback_in]
-  standard_name = gsd_chem_aer_ra_feedback
-  long_name = gsd chem aer radiation feedback option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[aer_ra_frq_in]
-  standard_name = gsd_chem_aer_ra_frq
-  long_name = gsd chem aer radiation frequency
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[chem_in_opt]
-  standard_name = gsd_chem_in_opt
-  long_name = gsd chem coldstart or restart option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[dust_calcdrag_in]
-  standard_name = gsd_chem_dust_calcdrag
-  long_name = gsd chem dust calcdrag
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[wetdep_ls_opt_in]
-  standard_name = gsd_chem_wetdep_ls_opt
-  long_name = gsd chem large scale wet deposition option
-  units = index
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[cplchm_rad_opt]
-  standard_name = flag_for_chemistry_coupling_radiation_feedback
-  long_name = flag controlling cplchm radiation feedback (default off)
-  units = flag
-  dimensions = ()
-  type = logical
   intent = in
   optional = F
 [errmsg]
