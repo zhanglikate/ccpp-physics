@@ -412,7 +412,6 @@ contains
              !
              !--------------------------------------------------------------------
 
-!             print*,'hli',ustar(i,j),u_ts
              IF (ustar(i,j) .gt. u_ts) then
                 call fengsha_hflux(ustar(i,j),u_ts,beta, salt)
                 salt = alpha * cmb * ds_rel(n) * airden(i,j,1) / g0 * salt * (erod(i,j)**gamma) * beta
@@ -459,13 +458,13 @@ contains
           DO j=1,jmx
              ! Calculate total mass emitted
              dsrc = emit_vol*den_dust(n)*distr_dust(n)*dxy(j)*dt1  ! (kg)
-             !print*,'hli',emit_vol,den_dust(n),distr_dust(n),dxy(j),dt1
              IF (dsrc < 0.0) dsrc = 0.0
 
              ! Update dust mixing ratio at first model level.
              tc(i,j,1,n) = tc(i,j,1,n) + dsrc / airmas(i,j,1) ! (kg/kg)
              !   bems(i,j,n) = dsrc  ! diagnostic
-             bems(i,j,n) = 1000.*dsrc/(dxy(j)*dt1) ! diagnostic (g/m2/s)
+             !bems(i,j,n) = 1000.*dsrc/(dxy(j)*dt1) ! diagnostic (g/m2/s)
+             bems(i,j,n) = 1.e+9*dsrc/(dxy(j)*dt1) ! diagnostic (ug/m2/s) !lzhang
           END DO
        END DO
     END DO

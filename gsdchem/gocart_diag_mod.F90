@@ -42,7 +42,7 @@ contains
         do k = 1, nk
           do j = 1, nj
             do i = 1, ni
-              coef = 1.e-6_kind_phys * (pr(i,j,k)-pr(i,j,k+1)) / g
+              coef = 1.e-9_kind_phys * (pr(i,j,k)-pr(i,j,k+1)) / g  !kg/m2
               ! -- black carbon
               trcm(i,j,2) = trcm(i,j,2) + coef * (tr(i,j,k,nbegin + p_bc1) + tr(i,j,k,nbegin + p_bc2))
               ! -- organic carbon
@@ -52,7 +52,8 @@ contains
               ! -- dust
               trcm(i,j,5) = trcm(i,j,5) + coef * (tr(i,j,k,nbegin + p_dust_1) + fdust2 * tr(i,j,k,nbegin + p_dust_2))
               ! -- seas
-              trcm(i,j,6) = trcm(i,j,6) + coef * (tr(i,j,k,nbegin + p_seas_1) + fseas2 * tr(i,j,k,nbegin + p_seas_2))
+              trcm(i,j,6) = trcm(i,j,6) + coef * (tr(i,j,k,nbegin + p_seas_1) + tr(i,j,k,nbegin + p_seas_2 ) &
+              + tr(i,j,k,nbegin + p_seas_3) + fseas2 * tr(i,j,k,nbegin + p_seas_4))
             end do
           end do
         end do
@@ -70,7 +71,7 @@ contains
 !        do k = 1, nk
 !          do j = 1, nj
 !            do i = 1, ni
-!              coef = 1.e-6_kind_phys * (pr(i,j,k)-pr(i,j,k+1)) / g
+!              coef = 1.e-9_kind_phys * (pr(i,j,k)-pr(i,j,k+1)) / g !kg/m2
 !              ! -- pm2.5 aerosol
 !              trcm(i,j,1) = trcm(i,j,1) + coef * (tr(i,j,k,nbegin + p_p25i) + tr(i,j,k,nbegin + p_p25j))
 !              ! -- black carbon
@@ -105,6 +106,7 @@ contains
     integer,                                intent(in)    :: ipos
     real(kind_phys), dimension(:,:,:),   intent(in)    :: v
     real(kind_phys), dimension(:,:,:,:), intent(inout) :: w
+    real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
 
     ! -- local variables
     integer :: m, n, nd, nt
@@ -120,7 +122,7 @@ contains
       if (n == p_so2) cycle
       if (n == p_msa) cycle
       m = m + 1
-      w(:,:,m,ipos) = v(:,:,n)
+      w(:,:,m,ipos) = ugkg*v(:,:,n) !kg/m2/s
     end do
     
   end subroutine gocart_diag_store

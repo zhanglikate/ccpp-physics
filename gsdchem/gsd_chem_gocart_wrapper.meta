@@ -64,7 +64,7 @@
 [rlat]
   standard_name = latitude
   long_name = latitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -73,7 +73,7 @@
 [rlon]
   standard_name = longitude
   long_name = longitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -247,6 +247,14 @@
   type = integer
   intent = in
   optional = F
+[chem_in_opt]
+  standard_name = gsd_chem_in_opt
+  long_name = gsd chem coldstart or restart option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
 [gq0]
   standard_name = tracer_concentration_updated_by_physics
   long_name = tracer concentration updated by physics
@@ -269,6 +277,14 @@
   standard_name = number_of_tile
   long_name = tile number
   units = none
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[chem_opt_in]
+  standard_name = gsd_chem_option
+  long_name = gsd chem option
+  units = index
   dimensions = ()
   type = integer
   intent = in

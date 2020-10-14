@@ -99,7 +99,7 @@
 [rlat]
   standard_name = latitude
   long_name = latitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -108,7 +108,7 @@
 [rlon]
   standard_name = longitude
   long_name = longitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -356,11 +356,28 @@
   type = integer
   intent = in
   optional = F
+[ndust]
+  standard_name = number_of_dust_bins_for_diagnostics
+  long_name = number of dust bins for diagnostics
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
 [gq0]
   standard_name = tracer_concentration_updated_by_physics
   long_name = tracer concentration updated by physics
   units = kg kg-1
   dimensions = (horizontal_dimension,vertical_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[duem]
+  standard_name = instantaneous_dust_emission_flux
+  long_name = instantaneous dust emission flux
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_dust_bins_for_diagnostics)
   type = real
   kind = kind_phys
   intent = inout
@@ -374,12 +391,46 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
+[chem_opt_in]
+  standard_name = gsd_chem_option
+  long_name = gsd chem option
+  units = index
   dimensions = ()
   type = integer
+  intent = in
+  optional = F
+[dust_opt_in]
+  standard_name = gsd_chem_dust_opt
+  long_name = gsd chem dust chem option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[dust_calcdrag_in]
+  standard_name = gsd_chem_dust_calcdrag
+  long_name = gsd chem dust calcdrag
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[dust_alpha_in]
+  standard_name = gsd_chem_dust_alpha
+  long_name = fengsha dust alpha
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[dust_gamma_in]
+  standard_name = gsd_chem_dust_gamma
+  long_name = fengsha dust gamma
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
   intent = in
   optional = F
 [errmsg]

@@ -46,6 +46,7 @@ contains
                    pr3d, ph3d, prl3d, tk3d, spechum, idat, emi2_in, ntrac,  &
                    ntso2, ntsulf, ntDMS, ntmsa, ntpp25,                     &
                    ntbc1, ntbc2, ntoc1, ntoc2, ntpp10,                      &
+                   chem_in_opt,chem_opt_in,                                 &
                    gq0, qgrs, tile_num, errmsg, errflg) 
 
     implicit none
@@ -66,6 +67,8 @@ contains
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    integer,        intent(in) :: chem_in_opt
+    integer,        intent(in) :: chem_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -74,16 +77,14 @@ contains
 
     real(kind_phys), dimension(ims:im, jms:jme) :: xlat, xlong, dxy
 
-!>- sea salt & chemistry variables
+!>- chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_moist)  :: moist 
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
-    real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem )  ::                  &
-                     var_rmv, dry_fall, tr_fall, sedim
 
     integer :: ide, ime, ite, kde, julday
 
 !   integer, parameter :: SEAS_OPT_DEFAULT = 1
-    integer, parameter :: chem_in_opt = 0  ! 0 for coldstart, 1 for restart
+!   integer, parameter :: chem_in_opt = 0  ! 0 for coldstart, 1 for restart
     logical, parameter :: readrestart = .false.
     integer, parameter :: nvl_gocart  = 64  ! number of input levels from gocart file
    
@@ -114,6 +115,8 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    chem_opt          = chem_opt_in
 
     gmt = real(idat(5))
     julday = real(julian)                                       

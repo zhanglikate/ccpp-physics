@@ -42,24 +42,23 @@ contains
 !!
 !>\section gsd_chem_dust_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_dust_wrapper_run(im, kte, kme, ktau, dt, garea, land, &
-                   u10m, v10m, ustar, rlat, rlon, tskin,   &
-                   hf2d, pb2d,                     &
-                   pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,  &
-                   nsoil, smc, vegtype, soiltyp, sigmaf,     & 
-                   dswsfc, zorl,snow_cpl,                               &
-                   dust_in,emi_in,       &
-                   nseasalt,ntrac,                                      &
-                   ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,      &
-                   gq0,qgrs,tile_num,                                    &
+    subroutine gsd_chem_dust_wrapper_run(im, kte, kme, ktau, dt, garea, land,   &
+                   u10m, v10m, ustar, rlat, rlon, tskin, hf2d, pb2d,            &
+                   pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,          &
+                   nsoil, smc, vegtype, soiltyp, sigmaf, dswsfc, zorl,snow_cpl, &
+                   dust_in,emi_in, nseasalt,ntrac,                              &
+                   ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ndust,               &
+                   gq0,qgrs,duem,                                               &
+                   chem_opt_in,dust_opt_in,dust_calcdrag_in,                    &
+                   dust_alpha_in,dust_gamma_in,                                 &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,nsoil,tile_num
+    integer,        intent(in) :: im,kte,kme,ktau,nsoil
     integer,        intent(in) :: nseasalt,ntrac
-    integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5
+    integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ndust
     real(kind_phys),intent(in) :: dt
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
@@ -77,6 +76,9 @@ contains
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    real(kind_phys), dimension(im,ndust    ), intent(inout) :: duem
+    integer,        intent(in) :: chem_opt_in, dust_opt_in, dust_calcdrag_in
+    real(kind_phys),intent(in) :: dust_alpha_in,dust_gamma_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -86,13 +88,9 @@ contains
     real(kind_phys), dimension(ims:im, jms:jme) :: u10, v10, ust, tsk,            &
                      xland, xlat, xlong, dxy, rcav, rnav, hfx, pbl
 
-!>- sea salt & chemistry variables
+!>- vapor & chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_moist)  :: moist 
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
-    real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem )  ::                  &
-                     var_rmv, dry_fall, tr_fall, sedim
-    real(kind_phys), dimension(ims:im, 1, jms:jme, 1:num_emis_seas  ) :: emis_seas
-    real(kind_phys), dimension(ims:im, jms:jme) :: seashelp
 
     integer :: ide, ime, ite, kde
 
@@ -107,11 +105,8 @@ contains
     integer,         dimension(ims:im, jms:jme) :: isltyp, ivgtyp
 
     integer :: current_month
-
-
-!>- plume variables
-    ! -- buffers
     real(kind_phys) :: dtstep
+    real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
 !>-- local variables
@@ -124,6 +119,10 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    chem_opt          = chem_opt_in
+    dust_opt          = dust_opt_in
+    dust_calcdrag     = dust_calcdrag_in
 
     ! -- set domain
     ide=im 
@@ -145,25 +144,19 @@ contains
 
 !>- get ready for chemistry run
     call gsd_chem_prep_dust(                                             &
-        ktau,dtstep,                      &
-        u10m,v10m,ustar,land,garea,rlat,rlon,tskin,                     &
-        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,                 &
-        nsoil,smc,vegtype,soiltyp,sigmaf,dswsfc,zorl,                   &
-        snow_cpl,dust_in,emi_in,                                &
-        hf2d,pb2d,                               &
-        u10,v10,ust,tsk,xland,xlat,xlong,dxy,                           &
-        rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,                   &
-        t8w,                                               &
-        z_at_w,                                               &
-        ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,                 &
-        ntrac,gq0,                                                      &
-        num_chem, num_moist,                                 &
-        ppm2ugkg,                                              &
-        moist,chem,                                    &
-        smois,ivgtyp,isltyp,vegfrac,rmol,gsw,znt,hfx,pbl,               &
-        snowh,clayf,rdrag,sandf,ssm,uthr,erod,             &
-        ids,ide, jds,jde, kds,kde,                                      &
-        ims,ime, jms,jme, kms,kme,                                      &
+        ktau,dtstep,                                                     &
+        u10m,v10m,ustar,land,garea,rlat,rlon,tskin,                      &
+        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,                    &
+        nsoil,smc,vegtype,soiltyp,sigmaf,dswsfc,zorl,                    &
+        snow_cpl,dust_in,emi_in,                                         &
+        hf2d,pb2d,u10,v10,ust,tsk,xland,xlat,xlong,dxy,                  &
+        rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,t8w,z_at_w,         &
+        ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,                         &
+        ntrac,gq0,num_chem, num_moist,ppm2ugkg,moist,chem,               &
+        smois,ivgtyp,isltyp,vegfrac,rmol,gsw,znt,hfx,pbl,                &
+        snowh,clayf,rdrag,sandf,ssm,uthr,erod,                           &
+        ids,ide, jds,jde, kds,kde,                                       &
+        ims,ime, jms,jme, kms,kme,                                       &
         its,ite, jts,jte, kts,kte)
 
 
@@ -183,8 +176,8 @@ contains
           its,ite, jts,jte, kts,kte)
        !store_arrays = .true.
       case (DUST_OPT_FENGSHA)
-       dust_alpha    = 2.0  !fengsha_alpha
-       dust_gamma    = 1.8  !fengsha_gamma
+       dust_alpha    = dust_alpha_in  !fengsha_alpha
+       dust_gamma    = dust_gamma_in  !fengsha_gamma
        call gocart_dust_fengsha_driver(dt,chem,rho_phy,smois,p8w,ssm,   &
             isltyp,vegfrac,snowh,xland,dxy,g,emis_dust,ust,znt,      &
             clayf,sandf,rdrag,uthr,                                     &
@@ -230,6 +223,7 @@ contains
      enddo
     enddo
 
+    duem(:,:)=ugkg*emis_dust(:,1,1,:)
 !
    end subroutine gsd_chem_dust_wrapper_run
 !> @}

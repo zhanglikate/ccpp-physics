@@ -72,7 +72,7 @@
 [rlat]
   standard_name = latitude
   long_name = latitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -81,7 +81,7 @@
 [rlon]
   standard_name = longitude
   long_name = longitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -431,15 +431,6 @@
   type = integer
   intent = in
   optional = F
-[drydep]
-  standard_name = instantaneous_dry_deposition
-  long_name = instantaneous dry deposition
-  units = kg m-2 s-1
-  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
 [gq0]
   standard_name = tracer_concentration_updated_by_physics
   long_name = tracer concentration updated by physics
@@ -458,10 +449,19 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
+[drydep]
+  standard_name = instantaneous_dry_deposition
+  long_name = instantaneous dry deposition
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[chem_conv_tr_in]
+  standard_name = gsd_chem_conv_tr
+  long_name = gsd chem convective transport option
+  units = index
   dimensions = ()
   type = integer
   intent = in

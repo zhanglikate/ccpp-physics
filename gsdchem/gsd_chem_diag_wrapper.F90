@@ -1,6 +1,6 @@
 !>\file gsd_chem_diag_wrapper.F90
 !! This file is GSD Chemistry diagnostic wrapper with CCPP coupling to FV3
-!! Haiqin.Li@noaa.gov 08/2020
+!! Haiqin.Li@noaa.gov 09/2020
 
  module gsd_chem_diag_wrapper
 
@@ -39,44 +39,50 @@ contains
 !!
 !>\section gsd_chem_diag_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_diag_wrapper_run(im, kte, kme, ktau,               &
-                   pr3d, ntrac, ntso2, gq0,  tile_num, tmpmax, tmpmin,     &
-                   spfhmax, spfhmin, t2m,   &
-                   ntchmdiag, nseasalt,drydep, wetdpl, ssem, & 
+    subroutine gsd_chem_diag_wrapper_run(im, kte, kme, ktau,                  &
+                   pr3d, ntrac, ntso2, gq0, aecm, ntchmdiag, ntchm,           &
+                   wetdpc, wetdpc_deep, wetdpc_mid,  wetdpc_shal,             &
+                   imfdeepcnv, imfdeepcnv_samf, imfdeepcnv_gf, chem_opt_in,   &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num
-    integer,        intent(in) :: ntrac,ntso2,ntchmdiag, nseasalt
+    integer,        intent(in) :: im,kte,kme,ktau
+    integer,        intent(in) :: ntrac,ntso2,ntchmdiag,ntchm
+    integer,        intent(in)  :: imfdeepcnv, imfdeepcnv_samf, imfdeepcnv_gf
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
-    real(kind_phys), dimension(im), intent(inout) :: tmpmax, tmpmin, spfhmax, spfhmin, t2m
     real(kind_phys), dimension(im,kme), intent(in) :: pr3d
-    real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: drydep, wetdpl
-    real(kind_phys), dimension(im,nseasalt), intent(inout) :: ssem
+    real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: wetdpc
+    real(kind_phys), dimension(im,ntchm), intent(in) :: wetdpc_deep, wetdpc_mid, wetdpc_shal
     real(kind_phys), dimension(im,kte,ntrac), intent(in) :: gq0
+    real(kind_phys), dimension(im,6        ), intent(inout) :: aecm
+    integer,        intent(in) :: chem_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
     ! -- for diagnostics
     real(kind_phys), dimension(ims:im, jms:jme, 6) :: trcm  ! inst tracer column mass density
+    real(kind_phys), dimension(ims:im, jms:jme, ntchmdiag, 4) :: trdf 
     real(kind_phys), dimension(im,jme,kte,ntrac) :: gq0j
     real(kind_phys), dimension(im,jme,kme) :: pr3dj
+    real(kind_phys), dimension(ims:im, jms:jme, 1:ntchm) :: wet_dep
 
     integer :: ide, ime, ite, kde
 
 
 !>-- local variables
-    integer :: i, j, jp, k, kp, nbegin
+    integer :: i, j, jp, k, kp, n, nbegin
   
 
     errmsg = ''
     errflg = 0
+
+    chem_opt          = chem_opt_in
 
     ! -- set domain
     ide=im 
@@ -89,16 +95,25 @@ contains
     gq0j (:,1,:,:)=gq0 (:,:,:)
     ! -- calculate column mass density
     call gocart_diag_cmass(chem_opt, nbegin, g, pr3dj, gq0j, trcm)
+    aecm(:,:)=trcm(:,1,:)
 
-    do i=1,im
-     tmpmax(i)=drydep(i,p_seas_1) 
-     !print*,'hli2 ssem',ssem(i,1),ssem(i,2),ssem(i,3),ssem(i,4),ssem(i,5)
-     tmpmin(i)=(ssem(i,1)+ssem(i,2)+ssem(i,3)+ssem(i,4)+ssem(i,5))
-     spfhmax(i)=wetdpl(i,p_seas_1) 
-     spfhmin(i)=wetdpl(i,p_oc1) 
-     t2m(i)=trcm(i,1,6) ! sea salt
-    enddo
-!   call gsd_chem_post() ! postprocessing for diagnostics
+    ! -- calculate convective wet deposition
+    if (imfdeepcnv == imfdeepcnv_samf) then
+     do n=1,ntchm
+      do i=1,im
+       wet_dep(i,1,n) = (max(0.,wetdpc_deep(i,n)) +max(0.,wetdpc_shal(i,n)))
+      enddo
+     enddo
+    elseif (imfdeepcnv == imfdeepcnv_gf) then
+     do n=1,ntchm
+      do i=1,im
+       wet_dep(i,1,n) = (max(0.,wetdpc_deep(i,n))+max(0.,wetdpc_mid(i,n)) +max(0.,wetdpc_shal(i,n))) 
+      enddo
+     enddo
+    endif
+
+    call gocart_diag_store(4, wet_dep, trdf)
+    wetdpc (:,:)=trdf(:,1,:,4)
 
 !
    end subroutine gsd_chem_diag_wrapper_run

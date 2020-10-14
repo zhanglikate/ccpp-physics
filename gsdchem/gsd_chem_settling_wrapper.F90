@@ -9,6 +9,7 @@
    use gsd_chem_config
    use gocart_settling_mod
    use vash_settling_mod
+   use gocart_diag_mod
 
    implicit none
 
@@ -40,21 +41,21 @@ contains
 !!
 !>\section gsd_chem_settling_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_settling_wrapper_run(im, kte, kme, ktau, dt, garea,  &
-                   pr3d, ph3d, prl3d, tk3d, spechum,                         &
-                   ntrac,ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                    &
-                   ntbc1,ntbc2,ntoc1,ntoc2,ntss1,ntss2,ntss3,ntss4,ntss5,    &
-                   ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,           &
-                   gq0,qgrs,tile_num,                                        &
+    subroutine gsd_chem_settling_wrapper_run(im, kte, kme, ktau, dt, garea,      &
+                   pr3d, ph3d, prl3d, tk3d, spechum,                             &
+                   ntrac,ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                        &
+                   ntbc1,ntbc2,ntoc1,ntoc2,ntss1,ntss2,ntss3,ntss4,ntss5,        &
+                   ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,ntchmdiag,     &
+                   gq0,qgrs,sedimio, dust_opt_in, seas_opt_in,                   &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num
+    integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5
-    integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
+    integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10,ntchmdiag
     integer,        intent(in) :: ntsulf,ntbc2,ntoc2,ntDMS,ntmsa
     real(kind_phys),intent(in) :: dt
 
@@ -66,11 +67,12 @@ contains
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: sedimio
+    integer,        intent(in) :: dust_opt_in, seas_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
-    real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: t_phy,       &
-                     p_phy, dz8w, p8w, rho_phy
+    real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: t_phy, p_phy, dz8w, p8w, rho_phy
 
     real(kind_phys), dimension(ims:im, jms:jme) :: dxy
 
@@ -83,6 +85,7 @@ contains
     integer :: ide, ime, ite, kde
 
     real(kind_phys), dimension(ims:im, jms:jme) :: ash_fall
+    real(kind_phys), dimension(im, 1, ntchmdiag, 4) :: trdf 
 
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
@@ -92,8 +95,12 @@ contains
 
     errmsg = ''
     errflg = 0
+ 
+    dust_opt          = dust_opt_in
+    seas_opt          = seas_opt_in
 
     ash_fall   = 0.
+    trdf       = 0.
 
     ! -- set domain
     ide=im 
@@ -169,6 +176,11 @@ contains
        qgrs(i,k,ntpp10 )=gq0(i,k,ntpp10 )
      enddo
     enddo
+
+    ! -- output sedimentation 
+    call gocart_diag_store(1, sedim, trdf)
+
+    sedimio(:,:)=trdf(:,1,:,1)
 
 !
    end subroutine gsd_chem_settling_wrapper_run

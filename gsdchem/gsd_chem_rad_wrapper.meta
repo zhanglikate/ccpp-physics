@@ -265,13 +265,14 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
-  dimensions = ()
-  type = integer
-  intent = in
+[abem]
+  standard_name = instantaneous_anthopogenic_and_biomass_burning_emissions
+  long_name = instantaneous anthopogenic and biomass burning emissions for black carbon, organic carbon, and sulfur dioxide
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,7)
+  type = real
+  kind = kind_phys
+  intent = inout
   optional = F
 [cplchm_rad_opt]
   standard_name = flag_for_chemistry_coupling_radiation_feedback
@@ -296,6 +297,30 @@
   dimensions = (horizontal_dimension,adjusted_vertical_layer_dimension_for_radiation,14,3)
   type = real
   kind = kind_phys
+  intent = in
+  optional = F
+[chem_opt_in]
+  standard_name = gsd_chem_option
+  long_name = gsd chem option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[aer_ra_feedback_in]
+  standard_name = gsd_chem_aer_ra_feedback
+  long_name = gsd chem aer radiation feedback option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[aer_ra_frq_in]
+  standard_name = gsd_chem_aer_ra_frq
+  long_name = gsd chem aer radiation frequency
+  units = index
+  dimensions = ()
+  type = integer
   intent = in
   optional = F
 [errmsg]

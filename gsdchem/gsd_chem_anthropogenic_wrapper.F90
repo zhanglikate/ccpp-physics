@@ -41,13 +41,14 @@ contains
     subroutine gsd_chem_anthropogenic_wrapper_run(im, kte, kme, ktau, dt,               &
                    pr3d, ph3d,phl3d, prl3d, tk3d, spechum,emi_in,                       &
                    ntrac,ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,                        &
-                   gq0,qgrs,tile_num,                                                   &
+                   gq0,qgrs,abem,                                                       &
+                   chem_opt_in,kemit_in,     &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num
+    integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: ntrac
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     integer,        intent(in) :: ntsulf
@@ -62,14 +63,14 @@ contains
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    real(kind_phys), dimension(im,7        ), intent(inout) :: abem
+    integer,        intent(in) :: chem_opt_in, kemit_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
     real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: rri, t_phy,       &
                      p_phy, z_at_w, dz8w, p8w, rho_phy
 
-    real(kind_phys), dimension(ims:im, jms:jme) ::              &
-                     rcav, rnav
 
 !>- chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
@@ -81,9 +82,9 @@ contains
     ! -- buffers
     real(kind_phys), dimension(ims:im, kms:kemit, jms:jme, 1:num_emis_ant) :: emis_ant
     real(kind_phys) :: dtstep
-    logical, save :: firstfire = .true.
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
+    real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
 
 !>-- local variables
     integer :: i, j, jp, k, kp, n
@@ -91,6 +92,9 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    chem_opt          = chem_opt_in
+    kemit             = kemit_in
 
     ! -- set domain
     ide=im 
@@ -146,6 +150,10 @@ contains
        qgrs(i,k,ntpp10 )=gq0(i,k,ntpp10 )
      enddo
     enddo
+
+    abem(:,1)=ugkg*emis_ant(:,kts,1,p_e_bc )
+    abem(:,2)=ugkg*emis_ant(:,kts,1,p_e_oc )
+    abem(:,3)=ugkg*emis_ant(:,kts,1,p_e_so2)
 
 !
    end subroutine gsd_chem_anthropogenic_wrapper_run

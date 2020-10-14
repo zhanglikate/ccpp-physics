@@ -219,10 +219,10 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
+[dmsemis_opt_in]
+  standard_name = gsd_chem_dms_emis_opt
+  long_name = gsd chem dms emission option
+  units = index
   dimensions = ()
   type = integer
   intent = in

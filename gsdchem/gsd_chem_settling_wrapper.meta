@@ -274,6 +274,14 @@
   type = integer
   intent = in
   optional = F
+[ntchmdiag]
+  standard_name = number_of_chemical_tracers_for_diagnostics
+  long_name = number of chemical tracers for diagnostic output
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
 [gq0]
   standard_name = tracer_concentration_updated_by_physics
   long_name = tracer concentration updated by physics
@@ -292,10 +300,27 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
+[sedimio]
+  standard_name = instantaneous_sedimentation
+  long_name = instantaneous sedimentation
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[dust_opt_in]
+  standard_name = gsd_chem_dust_opt
+  long_name = gsd chem dust chem option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[seas_opt_in]
+  standard_name = gsd_chem_sea_salt_opt
+  long_name = gsd chem sea salt emission option
+  units = index
   dimensions = ()
   type = integer
   intent = in

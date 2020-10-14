@@ -189,13 +189,17 @@ contains
         var_rmvl(i,k,j)=dvar
         if((var(i,k,j,nv)-dvar).lt.1.e-16)then
            dvar=var(i,k,j,nv)-1.e-16
+           var_rmvl(i,k,j)=dvar !lzhang
            var(i,k,j,nv)=var(i,k,j,nv)-dvar
         else
            var(i,k,j,nv)=var(i,k,j,nv)-dvar
         endif
-        var_rmv(i,j,nv)=var_rmv(i,j,nv)+var_rmvl(i,k,j)
+        !var_rmv(i,j,nv)=var_rmv(i,j,nv)+var_rmvl(i,k,j)
+        !!convert wetdeposition into ug/m2/s  
+        var_rmv(i,j,nv)=var_rmv(i,j,nv)+(var_rmvl(i,k,j)*rho(i,k,j)*dz8w(i,k,j)/dt) !lzhang
         endif
        enddo
+       var_rmv(i,j,nv)=max(0.,var_rmv(i,j,nv))
     endif
     enddo
     enddo
@@ -306,7 +310,8 @@ contains
 !  Accumulate the 3-dimensional arrays of rhoa and pdog
    do j = j1, j2
     do i = i1, i2
-      pdog(i,k1:k2,j) = (ple(i,k1+1:k2+1,j)-ple(i,k1:k2,j)) / grav
+     !pdog(i,k1:k2,j) = (ple(i,k1+1:k2+1,j)-ple(i,k1:k2,j)) / grav
+      pdog(i,k1:k2,j) = (ple(i,k1:k2,j)-ple(i,k1+1:k2+1,j)) / grav !lzhang
     enddo
    enddo
 
@@ -329,25 +334,30 @@ contains
 
 !    Find the highest model layer experiencing rainout.  Assumes no
 !    scavenging if T < 258 K
-     LH = 0
-     do k = k1, k2
+     !LH = 0
+     LH = k2+1 !lzhang
+     !do k = k1, k2
+     do k = k2, k1,-1 !lzhang
       if(dqcond(i,k,j) .lt. 0. .and. tmpu(i,k,j) .gt. 258.) then
        LH = k
        goto 15
       endif
      end do
  15  continue
-     if(LH .lt. 1) goto 100
+     !if(LH .lt. 1) goto 100
+     if(LH .gt. k2) goto 100 !lzhang
 
 !    convert dqcond from kg water/kg air/s to kg water/m3/s and reverse
 !    sign so that dqcond < 0. (positive precip) means qls and qcv > 0.
-     do k = LH, k2
+     !do k = LH, k2
+     do k = LH, k1, -1  !lzhang
       qls(k) = -dqcond(i,k,j)*pls/pac*rhoa(i,k,j)
       qcv(k) = -dqcond(i,k,j)*pcv/pac*rhoa(i,k,j)
      end do
 
 !    Loop over vertical to do the scavenging!
-     do k = LH, k2
+     !do k = LH, k2
+     do k = LH, k1, -1  !lzhang
 
 !-----------------------------------------------------------------------------
 !   (1) LARGE-SCALE RAINOUT:
@@ -384,11 +394,14 @@ contains
 ! * (2) LARGE-SCALE WASHOUT:
 ! *     Occurs when rain at this level is less than above.
 !-----------------------------------------------------------------------------
-      if(k .gt. LH .and. qls(k) .ge. 0.) then
-       if(qls(k) .lt. qls(k-1)) then
+      !if(k .gt. LH .and. qls(k) .ge. 0.) then
+      if(k .lt. LH .and. qls(k) .ge. 0.) then !lzhang
+       !if(qls(k) .lt. qls(k-1)) then
+       if(qls(k) .lt. qls(k+1)) then  !lzhang
 !       Find a maximum F overhead until the level where Qls<0.
         Qmx   = 0.
-        do kk = k-1,LH,-1
+        !do kk = k-1,LH,-1
+        do kk = k+1,LH  !lzhang
          if (Qls(kk).gt.0.) then
           Qmx = max(Qmx,Qls(kk))
          else
@@ -423,7 +436,7 @@ contains
          chem(i,k,j,nv) = chem(i,k,j,nv)-DC(n)
          if (chem(i,k,j,nv) .lt. 1.0E-32) &
           chem(i,k,j,nv) = 1.0E-32
-          var_rmv(i,j,nv) = var_rmv(i,j,nv)+DC(n)*pdog(i,k,j)/cdt
+          var_rmv(i,j,nv) = var_rmv(i,j,nv)+DC(n)*pdog(i,k,j)/cdt !ug/m2/s
         end do
 
        end if
@@ -463,11 +476,14 @@ contains
 !      Occurs when rain at this level is less than above.
 !-----------------------------------------------------------------------------
 
-      if (k.gt.LH .and. Qcv(k).ge.0.) then
-       if (Qcv(k).lt.Qcv(k-1)) then
+      !if (k.gt.LH .and. Qcv(k).ge.0.) then
+      if (k.lt.LH .and. Qcv(k).ge.0.) then !lzhang
+       !if (Qcv(k).lt.Qcv(k-1)) then
+       if (Qcv(k).lt.Qcv(k+1)) then !lzhang
 !-----  Find a maximum F overhead until the level where Qls<0.
         Qmx   = 0.
-        do kk = k-1, LH, -1
+        !do kk = k-1, LH, -1
+        do kk = k+1, LH !lzhang
          if (Qcv(kk).gt.0.) then
           Qmx = max(Qmx,Qcv(kk))
          else
@@ -502,7 +518,7 @@ contains
          chem(i,k,j,nv) = chem(i,k,j,nv)-DC(n)
          if (chem(i,k,j,nv) .lt. 1.0E-32) &
           chem(i,k,j,nv) = 1.0E-32
-          var_rmv(i,j,nv) = var_rmv(i,j,nv)+DC(n)*pdog(i,k,j)/cdt
+          var_rmv(i,j,nv) = var_rmv(i,j,nv)+DC(n)*pdog(i,k,j)/cdt !ug/m2/s
         end do
 
        end if
@@ -513,23 +529,28 @@ contains
 !      has been oxidized by H2O2 at the level above.
 !-----------------------------------------------------------------------------
 !     Add in the flux from above, which will be subtracted if reevaporation occurs
-      if(k .gt. LH) then
+      !if(k .gt. LH) then
+      if(k .lt. LH) then !lzhang
        do n = 1, nbins
-        Fd(k,n) = Fd(k,n) + Fd(k-1,n)
+        !Fd(k,n) = Fd(k,n) + Fd(k-1,n)
+        Fd(k,n) = Fd(k,n) + Fd(k+1,n)  !lzhang
        end do
 
 !      Is there evaporation in the currect layer?
        if (-dqcond(i,k,j) .lt. 0.) then
 !       Fraction evaporated = H2O(k)evap / H2O(next condensation level).
-        if (-dqcond(i,k-1,j) .gt. 0.) then
+        !if (-dqcond(i,k-1,j) .gt. 0.) then
+        if (-dqcond(i,k+1,j) .gt. 0.) then !lzhang
 
           A =  abs(  dqcond(i,k,j) * pdog(i,k,j)    &
-            /      ( dqcond(i,k-1,j) * pdog(i,k-1,j))  )
+            !/      ( dqcond(i,k-1,j) * pdog(i,k-1,j))  )
+            /      ( dqcond(i,k+1,j) * pdog(i,k+1,j))  ) !lzhang
           if (A .gt. 1.) A = 1.
 
 !         Adjust tracer in the level
           do n = 1, nbins
-           DC(n) =  Fd(k-1,n) / pdog(i,k,j) * A
+           !DC(n) =  Fd(k-1,n) / pdog(i,k,j) * A
+           DC(n) =  Fd(k+1,n) / pdog(i,k,j) * A  !lzhang
            chem(i,k,j,nv) = chem(i,k,j,nv) + DC(n)
            chem(i,k,j,nv) = max(chem(i,k,j,nv),1.e-32)
 !          Adjust the flux out of the bottom of the layer
@@ -542,7 +563,8 @@ contains
      end do  ! k
 
      do n = 1, nbins
-       var_rmv(i,j,nv) = var_rmv(i,j,nv)+Fd(k2,n)/cdt
+       !var_rmv(i,j,nv) = var_rmv(i,j,nv)+Fd(k2,n)/cdt !lzhang
+       var_rmv(i,j,nv) = var_rmv(i,j,nv)+Fd(k1,n)/cdt ! ug/m2/s
      end do
 
  100 continue

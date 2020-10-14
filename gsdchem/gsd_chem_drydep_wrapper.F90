@@ -8,6 +8,7 @@
    use machine ,        only : kind_phys
    use gsd_chem_config
    use dep_dry_mod
+   use gocart_diag_mod
 
    implicit none
 
@@ -46,14 +47,13 @@ contains
                    ntrac,ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                     &
                    ntbc1,ntbc2,ntoc1,ntoc2,ntss1,ntss2,ntss3,ntss4,ntss5,     &
                    ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,            &
-                   ntchmdiag, drydep,                                         &
-                   gq0,qgrs,tile_num,                                         &
+                   ntchmdiag,gq0,qgrs,drydep,chem_conv_tr_in,                 &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,jdate(8),idat(8),tile_num
+    integer,        intent(in) :: im,kte,kme,ktau,jdate(8),idat(8)
     integer,        intent(in) :: ntrac,ntchmdiag,ntss1,ntss2,ntss3,ntss4,ntss5
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
@@ -70,8 +70,9 @@ contains
                 hf2d, pb2d, sigmaf, dswsfc, zorl, snow_cpl
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d, spechum, exch
-    real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: drydep
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: drydep
+    integer,        intent(in) :: chem_conv_tr_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -86,6 +87,7 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
 
     real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem )  :: dry_fall
+    real(kind_phys), dimension(im, 1, ntchmdiag, 4) :: trdf
 
     integer :: ide, ime, ite, kde, julday
 
@@ -110,6 +112,8 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    chem_conv_tr      = chem_conv_tr_in
 
     h2oai = 0.
     h2oaj = 0.
@@ -230,11 +234,10 @@ contains
      enddo
     enddo
 
-    do n=1,ntchmdiag
-     do i=its,ite
-       drydep(i,n)=dry_fall(i,1,n)
-     enddo
-    enddo
+    ! -- output dry deposition
+    call gocart_diag_store(2, dry_fall, trdf)
+
+    drydep (:,:)=trdf(:,1,:,2)
 
 !
    end subroutine gsd_chem_drydep_wrapper_run

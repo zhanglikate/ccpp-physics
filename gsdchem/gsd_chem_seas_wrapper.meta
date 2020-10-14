@@ -99,7 +99,7 @@
 [rlat]
   standard_name = latitude
   long_name = latitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -108,7 +108,7 @@
 [rlon]
   standard_name = longitude
   long_name = longitude
-  units = radians
+  units = radian
   dimensions = (horizontal_dimension)
   type = real
   kind = kind_phys
@@ -260,14 +260,6 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
 [ssem]
   standard_name = instantaneous_seasalt_emission_flux
   long_name = instantaneous sea salt emission flux
@@ -276,6 +268,14 @@
   type = real
   kind = kind_phys
   intent = inout
+  optional = F
+[seas_opt_in]
+  standard_name = gsd_chem_sea_salt_opt
+  long_name = gsd chem sea salt emission option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
   optional = F
 [errmsg]
   standard_name = ccpp_error_message

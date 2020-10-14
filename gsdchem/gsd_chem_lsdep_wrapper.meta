@@ -168,6 +168,14 @@
   type = integer
   intent = in
   optional = F
+[ntchmdiag]
+  standard_name = number_of_chemical_tracers_for_diagnostics
+  long_name = number of chemical tracers for diagnostic output
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
 [ntso2]
   standard_name = index_for_so2
   long_name = tracer index for so2
@@ -346,30 +354,22 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[ntchmdiag]
-  standard_name = number_of_chemical_tracers_for_diagnostics
-  long_name = number of chemical tracers for diagnostic output
-  units = count
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
 [wetdpl]
   standard_name = instantaneous_large_scale_wet_deposition
   long_name = instantaneous large-scale wet deposition
   units = kg m-2 s-1
-  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
+  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
   type = real
   kind = kind_phys
   intent = inout
+  optional = F
+[wetdep_ls_opt_in]
+  standard_name = gsd_chem_wetdep_ls_opt
+  long_name = gsd chem large scale wet deposition option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
   optional = F
 [errmsg]
   standard_name = ccpp_error_message

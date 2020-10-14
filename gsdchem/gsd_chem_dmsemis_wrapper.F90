@@ -44,13 +44,13 @@ contains
                    u10m, v10m, tskin,                                      &
                    pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,     &
                    vegtype, soiltyp,                                       & 
-                   emi_in, ntrac, ntdms, gq0, qgrs, tile_num,              &
+                   emi_in, ntrac, ntdms, gq0, qgrs, dmsemis_opt_in,        &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,tile_num
+    integer,        intent(in) :: im,kte,kme
     integer,        intent(in) :: ntrac
     integer,        intent(in) :: ntdms
     real(kind_phys),intent(in) :: dt
@@ -67,6 +67,7 @@ contains
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    integer,        intent(in) :: dmsemis_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -92,6 +93,8 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    dmsemis_opt       = dmsemis_opt_in
 
     ! -- set domain
     ide=im 

@@ -225,7 +225,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
                (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           rh(1,1,kk)=max(1.0D-1,rh(1,1,kk))
           do nv = 1, num_chem
-            sedim(i,j,nv) = sedim(i,j,nv) + chem(i,k,j,nv)*p8w(i,k,j)/g
+            sedim(i,j,nv) = sedim(i,j,nv) + chem(i,k,j,nv)*p8w(i,k,j)/g  
           enddo
           enddo
 !
@@ -326,7 +326,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
             do k = kts,kte
               sedim(i,j,nv) = sedim(i,j,nv) - chem(i,k,j,nv)*p8w(i,k,j)/g
             enddo
-            sedim(i,j,nv) = sedim(i,j,nv) / dt
+            sedim(i,j,nv) = sedim(i,j,nv) / dt  !ug/m2/s
           enddo
 !
 !

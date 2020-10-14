@@ -77,55 +77,11 @@
   kind = kind_phys
   intent = in
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
-[tmpmax]
-  standard_name = maximum_temperature_at_2m
-  long_name = max temperature at 2m height
-  units = K
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[tmpmin]
-  standard_name = minimum_temperature_at_2m
-  long_name = min temperature at 2m height
-  units = K
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[spfhmax]
-  standard_name = maximum_specific_humidity_at_2m
-  long_name = maximum specific humidity at 2m height
-  units = kg kg-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[spfhmin]
-  standard_name = minimum_specific_humidity_at_2m
-  long_name = minimum specific humidity at 2m height
-  units = kg kg-1
-  dimensions = (horizontal_dimension)
-  type = real
-  kind = kind_phys
-  intent = inout
-  optional = F
-[t2m]
-  standard_name = temperature_at_2m
-  long_name = 2 meter temperature
-  units = K
-  dimensions = (horizontal_dimension)
+[aecm]
+  standard_name = instantaneous_aerosol_column_mass_densities
+  long_name = instantaneous aerosol column mass densities for pm2.5, black carbon, organic carbon, sulfate, dust, sea salt
+  units = kg m-2
+  dimensions = (horizontal_dimension,6)
   type = real
   kind = kind_phys
   intent = inout
@@ -138,40 +94,81 @@
   type = integer
   intent = in
   optional = F
-[nseasalt]
-  standard_name = number_of_seasalt_bins_for_diagnostics
-  long_name = number of seasalt bins for diagnostics
+[ntchm]
+  standard_name = number_of_chemical_tracers
+  long_name = number of chemical tracers
   units = count
   dimensions = ()
   type = integer
   intent = in
   optional = F
-[drydep]
-  standard_name = instantaneous_dry_deposition
-  long_name = instantaneous dry deposition
+[wetdpc]
+  standard_name = instantaneous_convective_scale_wet_deposition
+  long_name = instantaneous convective-scale wet deposition
   units = kg m-2 s-1
-  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
+  dimensions = (horizontal_dimension,number_of_chemical_tracers_for_diagnostics)
   type = real
   kind = kind_phys
   intent = inout
   optional = F
-[wetdpl]
-  standard_name = instantaneous_large_scale_wet_deposition
-  long_name = instantaneous large-scale wet deposition
+[wetdpc_deep]
+  standard_name = instantaneous_deep_convective_wet_deposition
+  long_name = instantaneous deep convective wet deposition
   units = kg m-2 s-1
-  dimensions = (horizonal_dimension,number_of_chemical_tracers_for_diagnostics)
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
   type = real
   kind = kind_phys
-  intent = inout
+  intent = in
   optional = F
-[ssem]
-  standard_name = instantaneous_seasalt_emission_flux
-  long_name = instantaneous sea salt emission flux
+[wetdpc_mid]
+  standard_name = instantaneous_mid_convective_wet_deposition
+  long_name = instantaneous mid convective wet deposition
   units = kg m-2 s-1
-  dimensions = (horizonal_dimension,number_of_seasalt_bins_for_diagnostics)
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
   type = real
   kind = kind_phys
-  intent = inout
+  intent = in
+  optional = F
+[wetdpc_shal]
+  standard_name = instantaneous_shal_convective_wet_deposition
+  long_name = instantaneous shallow convective wet deposition
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[imfdeepcnv]
+  standard_name = flag_for_mass_flux_deep_convection_scheme
+  long_name = flag for mass-flux deep convection scheme
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[imfdeepcnv_samf]
+  standard_name = flag_for_samf_deep_convection_scheme
+  long_name = flag for SAMF deep convection scheme
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[imfdeepcnv_gf]
+  standard_name = flag_for_gf_deep_convection_scheme
+  long_name = flag for Grell-Freitas deep convection scheme
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[chem_opt_in]
+  standard_name = gsd_chem_option
+  long_name = gsd chem option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
   optional = F
 [errmsg]
   standard_name = ccpp_error_message

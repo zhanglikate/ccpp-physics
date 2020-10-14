@@ -40,17 +40,18 @@ contains
 !!
 !>\section gsd_chem_plume_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_plume_wrapper_run(im, kte, kme, ktau, dt,        &
-                   pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,   &
-                   w,vegtype,fire_GBBEPx,fire_MODIS,                     &
-                   ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                &
-                   gq0,qgrs,ebu,tile_num,                                &
+    subroutine gsd_chem_plume_wrapper_run(im, kte, kme, ktau, dt,                &
+                   pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,           &
+                   w,vegtype,fire_GBBEPx,fire_MODIS,                             &
+                   ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
+                   gq0,qgrs,ebu,abem,                                            &
+                   biomass_burn_opt_in,plumerise_flag_in,plumerisefire_frq_in,   &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num
+    integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     real(kind_phys),intent(in) :: dt
 
@@ -65,7 +66,9 @@ contains
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum, w
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
+    real(kind_phys), dimension(im,7        ), intent(inout) :: abem
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: ebu
+    integer,        intent(in) :: biomass_burn_opt_in, plumerise_flag_in, plumerisefire_frq_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -89,10 +92,11 @@ contains
          firesize_agef, firesize_aggr, firesize_agsv, firesize_agtf
     real(kind_phys), dimension(ims:im, jms:jme, num_frp_plume ) :: plume_frp
     real(kind_phys) :: dtstep
-    integer,parameter :: plumerise_flag = 2  ! 1=MODIS, 2=GBBEPx
+   !integer,parameter :: plumerise_flag = 2  ! 1=MODIS, 2=GBBEPx
     logical :: call_plume, scale_fire_emiss
     logical, save :: firstfire = .true.
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
+    real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
 
 !>-- local variables
     real(kind_phys) :: curr_secs
@@ -103,6 +107,10 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    biomass_burn_opt  = biomass_burn_opt_in
+    plumerise_flag    = plumerise_flag_in
+    plumerisefire_frq = plumerisefire_frq_in
 
     curr_secs = ktau * dt
 
@@ -239,6 +247,10 @@ contains
        qgrs(i,k,ntpp10)=gq0(i,k,ntpp10 )
      enddo
     enddo
+
+    abem(:,4)=ugkg*ebu_in  (:,kts,p_ebu_in_bc )
+    abem(:,5)=ugkg*ebu_in  (:,kts,p_ebu_in_oc )
+    abem(:,6)=ugkg*ebu_in  (:,kts,p_ebu_in_so2)
 
 
    end subroutine gsd_chem_plume_wrapper_run

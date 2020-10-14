@@ -189,10 +189,27 @@
   kind = kind_phys
   intent = inout
   optional = F
-[tile_num]
-  standard_name = number_of_tile
-  long_name = tile number
-  units = none
+[abem]
+  standard_name = instantaneous_anthopogenic_and_biomass_burning_emissions
+  long_name = instantaneous anthopogenic and biomass burning emissions for black carbon, organic carbon, and sulfur dioxide
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,7)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[chem_opt_in]
+  standard_name = gsd_chem_option
+  long_name = gsd chem option
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[kemit_in]
+  standard_name = k_emit_dry_dep
+  long_name = gsd chem k emit dimention for dry deoposition
+  units = index
   dimensions = ()
   type = integer
   intent = in

@@ -43,13 +43,13 @@ contains
                    land, u10m, v10m, ustar, rlat, rlon, tskin,                &
                    pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,               &
                    nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,              &
-                   gq0,qgrs,tile_num,ssem,                                         &
+                   gq0,qgrs,ssem,seas_opt_in,                                 &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num
+    integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
     real(kind_phys),intent(in) :: dt
 
@@ -61,10 +61,10 @@ contains
     real(kind_phys), dimension(im), intent(in) :: u10m, v10m, ustar,               &
                 garea, rlat,rlon, tskin
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
-    real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d,        &
-                us3d, vs3d, spechum
+    real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, us3d, vs3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0,qgrs
     real(kind_phys), dimension(im,nseasalt), intent(inout) :: ssem
+    integer,        intent(in) :: seas_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -77,16 +77,11 @@ contains
 !>- sea salt & chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_moist)  :: moist 
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
-    real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem )  ::                  &
-                     var_rmv, dry_fall, tr_fall, sedim
     real(kind_phys), dimension(ims:im, 1, jms:jme, 1:num_emis_seas  ) :: emis_seas
     real(kind_phys), dimension(ims:im, jms:jme) :: seashelp
 
     integer :: ide, ime, ite, kde
-
-    ! -- buffers
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
-
 
 !>-- local variables
     logical :: store_arrays
@@ -95,6 +90,8 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    seas_opt          = seas_opt_in
 
     ! -- set domain
     ide=im 
@@ -120,7 +117,6 @@ contains
         its,ite, jts,jte, kts,kte)
 
 
-!if (ktau == 1) then
     ! -- compute sea salt
     if (seas_opt >= SEAS_OPT_DEFAULT) then
     call gocart_seasalt_driver(ktau,dt,rri,t_phy,moist,                 &
@@ -130,11 +126,7 @@ contains
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
-!      print*,'hli0 emis_seas',emis_seas
     endif
-
-
-!endif
 
     ! -- put chem stuff back into tracer array
     do k=kts,kte
@@ -157,12 +149,10 @@ contains
      enddo
     enddo
 
-!    print*,'hli nseasalt',nseasalt
     do i=1,im
      do n=1,nseasalt
       ssem(i,n)=emis_seas(i,1,1,n)
      enddo
-      !print*,'hli1 ssem',ssem(i,1),ssem(i,2),ssem(i,3),ssem(i,4),ssem(i,5)
    enddo
 
 !

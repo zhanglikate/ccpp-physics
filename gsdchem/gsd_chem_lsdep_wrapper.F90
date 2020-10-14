@@ -10,6 +10,7 @@
    use dep_wet_ls_mod
    use gocart_aerosols_mod
    use dust_data_mod
+   use gocart_diag_mod
 
    implicit none
 
@@ -44,19 +45,18 @@ contains
     subroutine gsd_chem_lsdep_wrapper_run(im, kte, kme, ktau, dt,       &
                    rain_cpl, rainc_cpl,                                 &
                    pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,  &
-                   w, dqdt, ntrac,                                      &
+                   w, dqdt, ntrac,ntchmdiag,                            &
                    ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                     &
                    ntbc1,ntbc2,ntoc1,ntoc2,                             &
                    ntss1,ntss2,ntss3,ntss4,ntss5,                       &
                    ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,      &
-                   gq0,qgrs,tile_num,                                   &
-                   ntchmdiag,wetdpl,      &
+                   gq0,qgrs,wetdpl,wetdep_ls_opt_in,                    &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num,ntchmdiag
+    integer,        intent(in) :: im,kte,kme,ktau,ntchmdiag
     integer,        intent(in) :: ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
@@ -73,33 +73,27 @@ contains
                 us3d, vs3d, spechum, w, dqdt
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
     real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: wetdpl
+    integer,        intent(in) :: wetdep_ls_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
     real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: rri, t_phy, u_phy, v_phy,       &
-                     p_phy, z_at_w, dz8w, p8w, t8w, rho_phy, vvel,        &
-                     dqdti
+                     p_phy, z_at_w, dz8w, p8w, t8w, rho_phy, vvel, dqdti
 
-    real(kind_phys), dimension(ims:im, jms:jme) ::             &
-                     rcav, rnav
+    real(kind_phys), dimension(ims:im, jms:jme) :: rcav, rnav
 
-!>- sea salt & chemistry variables
+!>- vapor & chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_moist)  :: moist 
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
-    real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem )  ::                  &
-                     var_rmv, dry_fall, tr_fall, sedim
-    real(kind_phys), dimension(ims:im, 1, jms:jme, 1:num_emis_seas  ) :: emis_seas
-    real(kind_phys), dimension(ims:im, jms:jme) :: seashelp
+    real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem )  :: var_rmv
 
     integer :: ide, ime, ite, kde
 
-!>- plume variables
-    ! -- buffers
     real(kind_phys) :: dtstep
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
     ! -- output tracers
-    real(kind_phys), dimension(ims:im, jms:jme, 1:num_chem) :: wet_dep
+    real(kind_phys), dimension(im, 1, ntchmdiag, 4) :: trdf
 
 
 !>-- local variables
@@ -112,6 +106,8 @@ contains
 
     errmsg = ''
     errflg = 0
+
+    wetdep_ls_opt     = wetdep_ls_opt_in
 
     curr_secs = ktau * dt
 
@@ -167,7 +163,6 @@ contains
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
-!    print*,'hli test2 ktau',ktau
 
      ! -- ls wet deposition
      select case (wetdep_ls_opt)
@@ -240,11 +235,10 @@ contains
      enddo
     enddo
 
-    do n=1,ntchmdiag
-     do i=its,ite
-       wetdpl(i,n)=var_rmv(i,1,n)
-     enddo
-    enddo
+    ! -- output large-scale wet deposition
+    call gocart_diag_store(3, var_rmv, trdf)
+
+     wetdpl (:,:)=trdf(:,1,:,3)
 
 !
    end subroutine gsd_chem_lsdep_wrapper_run

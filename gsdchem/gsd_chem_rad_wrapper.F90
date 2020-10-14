@@ -46,14 +46,15 @@ contains
                    ntbc1,ntbc2,ntoc1,ntoc2,                             &
                    ntss1,ntss2,ntss3,ntss4,ntss5,                       &
                    ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,      &
-                   gq0,tile_num,                                        &
+                   gq0,abem,                                            &
                    cplchm_rad_opt,lmk,faersw_cpl,                       &
+                   chem_opt_in,aer_ra_feedback_in,aer_ra_frq_in,        &
                    errmsg,errflg)
 
     implicit none
 
 
-    integer,        intent(in) :: im,kte,kme,ktau,tile_num
+    integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
@@ -67,9 +68,12 @@ contains
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d
     real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0
+    real(kind_phys), dimension(im,7        ), intent(inout) :: abem
     integer,         intent(in) :: lmk
     real(kind_phys), dimension(im, lmk, 14, 3),intent(inout) :: faersw_cpl
     logical, intent(in) :: cplchm_rad_opt
+    integer,        intent(in) :: chem_opt_in
+    integer,        intent(in) :: aer_ra_feedback_in,aer_ra_frq_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -87,7 +91,7 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:nbands) :: extt
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:nbands) :: ssca
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:nbands) :: asympar
-    real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:4) ::                  &
+    real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:4) ::                   &
         tauaersw, gaersw, waersw, bscoefsw,                                        &
         l2aer,  l3aer, l4aer, l5aer, l6aer, l7aer           
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:16) :: tauaerlw
@@ -98,13 +102,9 @@ contains
     real(kind_phys), dimension(im) :: aod2d
     real(kind_phys), dimension(im, kte, 1:nbands) :: ext_cof, sscal, asymp
 
-!>- plume variables
-    ! -- buffers
+!>-- local variables
     real(kind_phys) :: dtstep
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
-
-
-!>-- local variables
     real(kind_phys) :: curr_secs
     logical :: call_radiation
     logical :: store_arrays
@@ -115,7 +115,10 @@ contains
     errmsg = ''
     errflg = 0
 
-!    print*,'hli test1 ktau',ktau
+    chem_opt          = chem_opt_in
+    aer_ra_feedback   = aer_ra_feedback_in
+    aer_ra_frq        = aer_ra_frq_in
+
     h2oai = 0.
     h2oaj = 0.
     extt =0.
@@ -211,6 +214,9 @@ contains
         aod2d(its:ite) = aod(its:ite,1)
       end if
     endif
+
+    abem(:,7)=aod2d(:)
+
 !>---- feedback to radiation
     if (cplchm_rad_opt) then
      do nv = 1, nbands

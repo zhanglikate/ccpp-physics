@@ -161,7 +161,6 @@ contains
                        erodtot, ilwi, dxy, gravsm, airden, airmas, &
                        bems, g, drylimit, dust_alpha, dust_gamma)
 
-      print*,'hli tc',tc
      chem(i,kts,j,p_dust_1)=tc(1)*converi
      chem(i,kts,j,p_dust_2)=tc(2)*converi
      chem(i,kts,j,p_dust_3)=tc(3)*converi
@@ -423,7 +422,8 @@ end subroutine gocart_dust_afwa_driver
 
       ! Update dust mixing ratio at first model level.
         tc(i,j,1,n) = tc(i,j,1,n) + dsrc / airmas(i,j,1) ! (kg/kg)
-        bems(i,j,n) = dsrc/(dxy(j)*dt1) ! diagnostic (kg/m2/s)
+        !bems(i,j,n) = dsrc/(dxy(j)*dt1) ! diagnostic (kg/m2/s)
+        bems(i,j,n) = 1.e+9*dsrc/(dxy(j)*dt1) ! diagnostic (ug/m2/s)
      END DO
    END DO
  END DO
