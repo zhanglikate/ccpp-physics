@@ -1,5 +1,5 @@
 !>\file gsd_chem_diag_wrapper.F90
-!! This file is GSD Chemistry diagnostic wrapper with CCPP coupling to FV3
+!! This file is GSDChem diagnostic wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 09/2020
 
  module gsd_chem_diag_wrapper
@@ -74,8 +74,6 @@ contains
 
     integer :: ide, ime, ite, kde
 
-
-!>-- local variables
     integer :: i, j, jp, k, kp, n, nbegin
   
 

@@ -1,5 +1,5 @@
 !>\file gsd_chem_plume_wrapper.F90
-!! This file is GSD Chemistry plume wrapper with CCPP coupling to FV3
+!! This file is GSDChem plume wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 07/2020
 
  module gsd_chem_plume_wrapper
@@ -80,8 +80,6 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
 
     integer :: ide, ime, ite, kde
-   
-!>- dust & chemistry variables
     integer,         dimension(ims:im, jms:jme) :: ivgtyp
 
 !>- plume variables

@@ -1,5 +1,5 @@
 !>\file gsd_chem_drydep_wrapper.F90
-!! This file is GSD Chemistry dry deposition wrapper with CCPP coupling to FV3
+!! This file is GSDChem dry deposition wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 06/2020
 
  module gsd_chem_drydep_wrapper
@@ -100,13 +100,10 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme) :: ac3, ahno3, anh3, asulf, cor3, h2oai, h2oaj, nu3
     real(kind_phys), dimension(ims:im, jms:jme) :: dep_vel_o3, e_co
 
-!>- plume variables
-    ! -- buffers
     real(kind_phys) :: gmt
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
 !>-- local variables
-    integer :: nbegin, nv, nvv
     integer :: i, j, jp, k, kp, n
   
 

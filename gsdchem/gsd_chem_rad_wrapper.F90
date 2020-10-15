@@ -1,5 +1,5 @@
 !>\file gsd_chem_rad_wrapper.F90
-!! This file is GSD Chemistry radiation wrapper with CCPP coupling to FV3
+!! This file is GSDChem radiation wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 06/2020
 
  module gsd_chem_rad_wrapper
@@ -98,7 +98,6 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_ext_coef) :: ext_coeff
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_bscat_coef) :: bscat_coeff
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_asym_par)   :: asym_par
-!>- optical variables
     real(kind_phys), dimension(im) :: aod2d
     real(kind_phys), dimension(im, kte, 1:nbands) :: ext_cof, sscal, asymp
 

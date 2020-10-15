@@ -1,5 +1,5 @@
 !>\file gsd_chem_dmsemis_wrapper.F90
-!! This file is GSD Chemistry dms emission wrapper with CCPP coupling to FV3
+!! This file is GSDChem dms emission wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 06/2020
 
  module gsd_chem_dmsemis_wrapper
@@ -40,8 +40,8 @@ contains
 !!
 !>\section gsd_chem_dmsemis_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_dmsemis_wrapper_run(im, kte, kme, dt, garea, land, &
-                   u10m, v10m, tskin,                                      &
+    subroutine gsd_chem_dmsemis_wrapper_run(im, kte, kme, dt, garea,       &
+                   land, u10m, v10m, tskin,                                &
                    pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,     &
                    vegtype, soiltyp,                                       & 
                    emi_in, ntrac, ntdms, gq0, qgrs, dmsemis_opt_in,        &
@@ -60,32 +60,26 @@ contains
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
     integer, dimension(im), intent(in) :: land, vegtype, soiltyp        
-    real(kind_phys), dimension(im,   10), intent(in) :: emi_in
-    real(kind_phys), dimension(im), intent(in) :: u10m, v10m,               &
-                garea, tskin
-    real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
-    real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
-                us3d, vs3d, spechum
+    real(kind_phys), dimension(im,10), intent(in) :: emi_in
+    real(kind_phys), dimension(im),    intent(in) :: u10m, v10m, garea, tskin
+    real(kind_phys), dimension(im,kme),intent(in) :: ph3d, pr3d
+    real(kind_phys), dimension(im,kte),intent(in) :: phl3d, prl3d, tk3d, us3d, vs3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
-    integer,        intent(in) :: dmsemis_opt_in
+    integer,           intent(in) :: dmsemis_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
     real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: rri, t_phy, u_phy, v_phy,       &
                      dz8w, p8w, rho_phy
 
-    real(kind_phys), dimension(ims:im, jms:jme) :: u10, v10, tsk,            &
-                     xland, dxy
+    real(kind_phys), dimension(ims:im, jms:jme) :: u10, v10, tsk, xland, dxy
 
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
     real(kind_phys), dimension(ims:im, jms:jme) :: dms_0
     integer,         dimension(ims:im, jms:jme) :: isltyp, ivgtyp
     integer :: ide, ime, ite, kde
 
-    ! -- buffers
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
-
-
 
 !>-- local variables
     integer :: i, j, jp, k, kp, n
@@ -276,14 +270,11 @@ contains
       enddo
     enddo
 
- 
     do k=kms,kte
      do i=ims,ime
        chem(i,k,jts,p_dms   )=max(epsilc,gq0(i,k,ntdms  )/ppm2ugkg(p_dms))
      enddo
     enddo
-
-
 
 
   end subroutine gsd_chem_dmsemis_prep

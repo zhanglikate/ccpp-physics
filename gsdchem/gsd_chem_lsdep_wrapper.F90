@@ -1,5 +1,5 @@
 !>\file gsd_chem_lsdep_wrapper.F90
-!! This file is GSD Chemistry large-scale wet deposition driver with CCPP coupling to FV3
+!! This file is GSDChem large-scale wet deposition wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 06/2020
 
  module gsd_chem_lsdep_wrapper
@@ -67,13 +67,13 @@ contains
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
-    real(kind_phys), dimension(im), intent(in) ::  rain_cpl, rainc_cpl
+    real(kind_phys), dimension(im),     intent(in) :: rain_cpl, rainc_cpl
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum, w, dqdt
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
     real(kind_phys), dimension(im,ntchmdiag), intent(inout) :: wetdpl
-    integer,        intent(in) :: wetdep_ls_opt_in
+    integer,           intent(in) :: wetdep_ls_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -97,10 +97,6 @@ contains
 
 
 !>-- local variables
-    real(kind_phys) :: curr_secs
-    real(kind_phys) :: factor, factor2, factor3
-    logical :: store_arrays
-    integer :: nbegin, nv, nvv
     integer :: i, j, jp, k, kp, n
   
 
@@ -108,8 +104,6 @@ contains
     errflg = 0
 
     wetdep_ls_opt     = wetdep_ls_opt_in
-
-    curr_secs = ktau * dt
 
     ! -- set domain
     ide=im 
@@ -145,21 +139,16 @@ contains
 !!!
 
 !>- get ready for chemistry run
-    call gsd_chem_prep_lsdep(                                             &
-        ktau,dtstep,                      &
-        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,                 &
-        dqdt,                                                      &
+    call gsd_chem_prep_lsdep(ktau,dtstep,                               &
+        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w, dqdt,           &
         rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,                   &
-        t8w,dqdti,                                               &
-        z_at_w,vvel,                                              &
+        t8w,dqdti,z_at_w,vvel,                                          &
         ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                                &
         ntbc1,ntbc2,ntoc1,ntoc2,                                        &
         ntss1,ntss2,ntss3,ntss4,ntss5,                                  &
         ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,                 &
-        ntrac,gq0,                                                      &
-        num_chem, num_moist,                                 &
-        ppm2ugkg,                                              &
-        moist,chem,                                    &
+        ntrac,gq0,num_chem, num_moist,                                  &
+        ppm2ugkg,moist,chem,                                            &
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
@@ -244,21 +233,16 @@ contains
    end subroutine gsd_chem_lsdep_wrapper_run
 !> @}
 
-  subroutine gsd_chem_prep_lsdep(                                        &
-        ktau,dtstep,                     &
-        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,                &
-        dqdt,                                                     &
+  subroutine gsd_chem_prep_lsdep(ktau,dtstep,                          &
+        pr3d,ph3d,phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,dqdt,           &
         rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,                  &
-        t8w,dqdti,                                              &
-        z_at_w,vvel,                                             &
+        t8w,dqdti,z_at_w,vvel,                                         &
         ntso2,ntsulf,ntDMS,ntmsa,ntpp25,                               &
         ntbc1,ntbc2,ntoc1,ntoc2,                                       &
         ntss1,ntss2,ntss3,ntss4,ntss5,                                 &
         ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ntpp10,                &
-        ntrac,gq0,                                                     &
-        num_chem, num_moist,                                &
-        ppm2ugkg,                                             &
-        moist,chem,                                   &
+        ntrac,gq0,num_chem, num_moist,                                 &
+        ppm2ugkg,moist,chem,                                           &
         ids,ide, jds,jde, kds,kde,                                     &
         ims,ime, jms,jme, kms,kme,                                     &
         its,ite, jts,jte, kts,kte)
@@ -272,8 +256,7 @@ contains
     integer, intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5
     integer, intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     integer,        intent(in) :: ntsulf,ntbc2,ntoc2,ntDMS,ntmsa
-    real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) ::     &
-         pr3d,ph3d
+    real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) :: pr3d,ph3d
     real(kind=kind_phys), dimension(ims:ime, kts:kte), intent(in) ::       &
          phl3d,tk3d,prl3d,us3d,vs3d,spechum,w,dqdt
     real(kind=kind_phys), dimension(ims:ime, kts:kte,ntrac), intent(in) :: gq0
@@ -288,8 +271,7 @@ contains
     real(kind_phys), dimension(num_chem), intent(in) :: ppm2ugkg
     
     real(kind_phys), dimension(ims:ime, kms:kme, jms:jme), intent(out) ::              & 
-         rri, t_phy, u_phy, v_phy, p_phy, rho_phy, dz8w, p8w, t8w, vvel,         &
-         dqdti
+         rri, t_phy, u_phy, v_phy, p_phy, rho_phy, dz8w, p8w, t8w, vvel, dqdti
     real(kind_phys), dimension(ims:ime, kms:kme, jms:jme, num_moist), intent(out) :: moist
     real(kind_phys), dimension(ims:ime, kms:kme, jms:jme, num_chem),  intent(out) :: chem
 

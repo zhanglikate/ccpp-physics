@@ -1,5 +1,5 @@
 !>\file gsd_chem_anthropogenic_wrapper.F90
-!! This file is GSD Chemistry anthropogenic emission wrapper with CCPP coupling to FV3
+!! This file is GSDChem anthropogenic emission wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 07/2020
 
  module gsd_chem_anthropogenic_wrapper
@@ -41,8 +41,7 @@ contains
     subroutine gsd_chem_anthropogenic_wrapper_run(im, kte, kme, ktau, dt,               &
                    pr3d, ph3d,phl3d, prl3d, tk3d, spechum,emi_in,                       &
                    ntrac,ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,                        &
-                   gq0,qgrs,abem,                                                       &
-                   chem_opt_in,kemit_in,     &
+                   gq0,qgrs,abem,chem_opt_in,kemit_in,                                  &
                    errmsg,errflg)
 
     implicit none
@@ -58,13 +57,12 @@ contains
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
-    real(kind_phys), dimension(im,   10), intent(in) :: emi_in
+    real(kind_phys), dimension(im, 10), intent(in) :: emi_in
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
-    real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
-                spechum
+    real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
     real(kind_phys), dimension(im,7        ), intent(inout) :: abem
-    integer,        intent(in) :: chem_opt_in, kemit_in
+    integer,           intent(in) :: chem_opt_in, kemit_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -74,19 +72,12 @@ contains
 
 !>- chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
-
     integer :: ide, ime, ite, kde
-
-
-!>- plume variables
-    ! -- buffers
     real(kind_phys), dimension(ims:im, kms:kemit, jms:jme, 1:num_emis_ant) :: emis_ant
     real(kind_phys) :: dtstep
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
-
     real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
 
-!>-- local variables
     integer :: i, j, jp, k, kp, n
   
 

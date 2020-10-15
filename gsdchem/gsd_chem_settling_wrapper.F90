@@ -1,5 +1,5 @@
 !>\file gsd_chem_settling_wrapper.F90
-!! This file is GSD Chemistry settling wrapper with CCPP coupling to FV3
+!! This file is GSDChem settling wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 06/2020
 
  module gsd_chem_settling_wrapper

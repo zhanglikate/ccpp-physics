@@ -1,5 +1,5 @@
 !>\file gsd_chem_gocart_wrapper.F90
-!! This file is GSD Chemistry gocart wrapper with CCPP coupling to FV3
+!! This file is GSDChem gocart wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 06/2020
 
  module gsd_chem_gocart_wrapper
@@ -67,8 +67,8 @@ contains
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0, qgrs
-    integer,        intent(in) :: chem_in_opt
-    integer,        intent(in) :: chem_opt_in
+    integer,           intent(in) :: chem_in_opt
+    integer,           intent(in) :: chem_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
 
@@ -96,8 +96,6 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme) :: oh_t, h2o2_t, no3_t
     real(kind_phys), dimension(ims:im, jms:jme) :: ttday, tcosz
 
-!>- plume variables
-    ! -- buffers
     real(kind_phys) :: dtstep, gmt
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
@@ -108,8 +106,6 @@ contains
 
 !>-- local variables
     logical :: call_gocart
-    logical :: store_arrays
-    integer :: nbegin, nv, nvv
     integer :: i, j, jp, k, kp, n
   
 

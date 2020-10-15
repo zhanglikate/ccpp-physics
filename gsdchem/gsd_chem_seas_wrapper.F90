@@ -1,5 +1,5 @@
 !>\file gsd_chem_seas_wrapper.F90
-!! This file is GSD Chemistry sea salt wrapper with CCPP coupling to FV3
+!! This file is GSDChem sea salt wrapper with CCPP coupling to FV3
 !! Haiqin.Li@noaa.gov 05/2020
 
  module gsd_chem_seas_wrapper
@@ -63,7 +63,7 @@ contains
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, us3d, vs3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0,qgrs
-    real(kind_phys), dimension(im,nseasalt), intent(inout) :: ssem
+    real(kind_phys), dimension(im, nseasalt), intent(inout) :: ssem
     integer,        intent(in) :: seas_opt_in
     character(len=*), intent(out) :: errmsg
     integer,          intent(out) :: errflg
@@ -71,7 +71,7 @@ contains
     real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: rri, t_phy, u_phy, v_phy,       &
                      dz8w, p8w, rho_phy
 
-    real(kind_phys), dimension(ims:im, jms:jme) :: u10, v10, ust, tsk,            &
+    real(kind_phys), dimension(ims:im, jms:jme) :: u10, v10, ust, tsk,                 &
                      xland, xlat, xlong, dxy
 
 !>- sea salt & chemistry variables
@@ -84,7 +84,6 @@ contains
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
 
 !>-- local variables
-    logical :: store_arrays
     integer :: i, j, jp, k, kp, n
   
 
