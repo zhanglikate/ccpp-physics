@@ -628,6 +628,15 @@
   kind = kind_phys
   intent = out
   optional = F
+[wetdpc_deep]
+  standard_name = instantaneous_deep_convective_wet_deposition
+  long_name = instantaneous deep convective wet deposition
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = out
+  optional = F
 [errmsg]
   standard_name = ccpp_error_message
   long_name = error message for error handling in CCPP

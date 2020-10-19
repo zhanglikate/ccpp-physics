@@ -54,7 +54,7 @@
      &     t0c,delt,ntk,ntr,delp,                                       &
      &     prslp,psp,phil,qtr,q1,t1,u1,v1,fscav,                        &
      &     rn,kbot,ktop,kcnv,islimsk,garea,                             &
-     &     dot,ncloud,hpbl,ud_mf,dt_mf,cnvw,cnvc,                       &
+     &     dot,ncloud,hpbl,ud_mf,dt_mf,cnvw,cnvc,wetdpc_shal,           &
      &     clam,c0s,c1,pgcon,asolfac,hwrf_samfshal,errmsg,errflg)
 !
       use machine , only : kind_phys
@@ -180,6 +180,7 @@ c  local variables and arrays
      &                     ctr(im,km,ntr), ctro(im,km,ntr)
 !  for aerosol transport
       real(kind=kind_phys) qaero(im,km,ntc)
+      real(kind=kind_phys) wetdpc_shal(im,ntc)
 !  for updraft velocity calculation
       real(kind=kind_phys) wu2(im,km),     buo(im,km),    drag(im,km)
       real(kind=kind_phys) wc(im),         scaldfunc(im), sigmagfm(im)
@@ -285,6 +286,7 @@ c
         cina(i) = 0.
         vshear(i) = 0.
         gdx(i) = sqrt(garea(i))
+        wetdpc_shal(i,:)=0.
        enddo
       endif
 !!
@@ -1844,7 +1846,13 @@ c
           do k = 1, km
             do i = 1, im
               if(cnvflg(i) .and. rn(i) > 0.) then
-                if (k <= kmax(i)) qtr(i,k,kk) = qaero(i,k,n)
+               !if (k <= kmax(i)) qtr(i,k,kk) = qaero(i,k,n)
+                if (k <= kmax(i)) then !lzhang
+                !convert wetdeposition into ug/m2/s !lzhang
+                wetdpc_shal(i,n)=wetdpc_shal(i,n)
+     &  + ((qtr(i,k,kk)-qaero(i,k,n))*delp(i,k)/(grav*delt))
+                qtr(i,k,kk) = qaero(i,k,n)
+                endif
               endif
             enddo
           enddo
