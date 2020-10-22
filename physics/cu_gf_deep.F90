@@ -1200,7 +1200,7 @@ contains
           endif
           if(zdo(i,ki+1).gt.0.)cdd(i,ki)= dd_massdetro(i,ki)/(dzo*zdo(i,ki+1))
         enddo
-!         cbeg=800. !po_cup(i,kbcon(i)) !850.
+!         cbeg=800. !po_cup(i,kbcon(i)) !850.
 !         cend=min(po_cup(i,ktop(i)),200.)
 !         cmid=.5*(cbeg+cend) !600.
 !         const_b=c1/((cmid*cmid-cbeg*cbeg)*(cbeg-cend)/(cend*cend-cbeg*cbeg)+cmid-cbeg)
