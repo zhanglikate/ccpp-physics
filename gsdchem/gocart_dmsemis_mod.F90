@@ -62,7 +62,7 @@ contains
   do j=jts,jte
   do i=its,ite
 !
-! donṫ do this over land
+! don't do this over land
 !
      !if(xland(i,j).gt.1.5 .and. tsk(i,j).gt.273.)then
      if(xland(i,j).lt.0.5 .and. tsk(i,j).gt.273.)then
@@ -76,7 +76,7 @@ contains
      tskin(1,1)=tsk(i,j)
      emsdms(1,1)=0.
 !
-! we donṫ trust the u10,v10 values, is model layers are very thin near surface
+! we don't trust the u10,v10 values, is model layers are very thin near surface
 !
 !    if(dz8w(i,kts,j).lt.12.)w10m=sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
      w10m=sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))

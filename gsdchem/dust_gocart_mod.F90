@@ -107,7 +107,7 @@ contains
            w10m(1,1)=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
            airmas(1,1)=-(p8w(i,kts+1,j)-p8w(i,kts,j))*area(i,j)/g
 
-           ! -- we donṫ trust the u10,v10 values, is model layers are very thin near surface
+           ! -- we don't trust the u10,v10 values, is model layers are very thin near surface
            if(dz8w(i,kts,j).lt.12.)w10m=sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
            erodin(1,1,1,1)=erod(i,j,1)!/area(i,j)
            erodin(1,1,2,1)=erod(i,j,2)!/area(i,j)
@@ -154,7 +154,7 @@ contains
          w10m(1,1)=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
          airmas(1,1)=-(p8w(i,kts+1,j)-p8w(i,kts,j))*area(i,j)/g
 
-         ! -- we donṫ trust the u10,v10 values, is model layers are very thin near surface
+         ! -- we don't trust the u10,v10 values, is model layers are very thin near surface
          if(dz8w(i,kts,j).lt.12.)w10m=sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
            erodin(1,1,1,1)=erod(i,j,1)!/area(i,j)
            erodin(1,1,2,1)=erod(i,j,2)!/area(i,j)
