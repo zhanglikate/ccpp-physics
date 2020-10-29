@@ -191,8 +191,8 @@ contains
         case (2)
           call aero_opt('sw',dz8w,chem                                  &
                    ,rri,relhum,aod                                      &
-                   ,extt,ssca,asympar                                   &
-!                  ,extt,ssca,asympar,num_chem                          &
+!                  ,extt,ssca,asympar                                   &
+                   ,extt,ssca,asympar,num_chem                          &
                    ,ids,ide, jds,jde, kds,kde                           &
                    ,ims,ime, jms,jme, kms,kme                           &
                    ,its,ite, jts,jte, kts,kte)

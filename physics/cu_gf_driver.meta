@@ -45,9 +45,25 @@
 [ccpp-arg-table]
   name = cu_gf_driver_run
   type = scheme
-[ntracer]
-  standard_name = number_of_tracers
-  long_name = number of tracers
+[ntc]
+  standard_name = number_of_chemical_tracers
+  long_name = number of chemical tracers
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[ntr]
+  standard_name = number_of_tracers_for_samf
+  long_name = number of tracers for scale-aware mass flux schemes
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[itc]
+  standard_name = number_of_aerosol_tracers_for_convection
+  long_name = number of aerosol tracers transported/scavenged by convection
   units = count
   dimensions = ()
   type = integer
@@ -463,6 +479,51 @@
   type = real
   kind = kind_phys
   intent = inout
+  optional = F
+[clw]
+  standard_name = convective_transportable_tracers
+  long_name = array to contain cloud water and other convective trans. tracers
+  units = kg kg-1
+  dimensions = (horizontal_dimension,vertical_dimension,number_of_tracers_for_convective_transport)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[fscav]
+  standard_name = coefficients_for_aerosol_scavenging
+  long_name = array of aerosol scavenging coefficients
+  units = none
+  dimensions = (number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[wetdpc_deep]
+  standard_name = instantaneous_deep_convective_wet_deposition
+  long_name = instantaneous deep convective wet deposition
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = out
+  optional = F
+[wetdpc_mid]
+  standard_name = instantaneous_mid_convective_wet_deposition
+  long_name = instantaneous mid convective wet deposition
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = out
+  optional = F
+[wetdpc_shal]
+  standard_name = instantaneous_shal_convective_wet_deposition
+  long_name = instantaneous shallow convective wet deposition
+  units = kg m-2 s-1
+  dimensions = (horizontal_dimension,number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = out
   optional = F
 [errmsg]
   standard_name = ccpp_error_message
