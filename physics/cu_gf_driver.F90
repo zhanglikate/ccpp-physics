@@ -68,7 +68,7 @@ contains
 !!
 !>\section gen_gf_driver GSD GF Cumulus Scheme General Algorithm
 !> @{
-      subroutine cu_gf_driver_run(ntracer,garea,im,km,dt,cactiv,                &
+      subroutine cu_gf_driver_run(ntc,ntr,itc,garea,im,km,dt,cactiv,            &
                forcet,forceqv_spechum,phil,raincv,qv_spechum,t,cld1d,           &
                us,vs,t2di,w,qv2di_spechum,p2di,psuri,                           &
                hbot,htop,kcnv,xland,hfx2,qfx2,cliw,clcw,                        &
@@ -76,7 +76,9 @@ contains
                flag_for_scnv_generic_tend,flag_for_dcnv_generic_tend,           &
                du3dt_SCNV,dv3dt_SCNV,dt3dt_SCNV,dq3dt_SCNV,                     &
                du3dt_DCNV,dv3dt_DCNV,dt3dt_DCNV,dq3dt_DCNV,                     &
-               ldiag3d,qdiag3d,qci_conv,errmsg,errflg)
+               ldiag3d,qdiag3d,qci_conv,clw,fscav,                              &
+               wetdpc_deep,wetdpc_mid,wetdpc_shal,                              &
+               errmsg,errflg)
 !-------------------------------------------------------------
       implicit none
       integer, parameter :: maxiens=1
@@ -97,18 +99,21 @@ contains
       integer            :: ishallow_g3 ! depend on imfshalcnv
 !-------------------------------------------------------------
    integer      :: its,ite, jts,jte, kts,kte 
-   integer, intent(in   ) :: im,km,ntracer
+   integer, intent(in   ) :: im,km,ntc,ntr,itc
    logical, intent(in   ) :: flag_for_scnv_generic_tend,flag_for_dcnv_generic_tend
    logical, intent(in   ) :: ldiag3d,qdiag3d
 
    real(kind=kind_phys),  dimension( im , km ), intent(in )    :: forcet,forceqv_spechum,w,phil
    real(kind=kind_phys),  dimension( im , km ), intent(inout ) :: t,us,vs
    real(kind=kind_phys),  dimension( im , km ), intent(inout ) :: qci_conv
+   real(kind=kind_phys),  dimension( im , ntc), intent(out   ) :: wetdpc_deep, wetdpc_mid, wetdpc_shal
    real(kind=kind_phys),  dimension( im )   :: rand_mom,rand_vmas
    real(kind=kind_phys),  dimension( im,4 ) :: rand_clos
    real(kind=kind_phys),  dimension( im , km, 11 ) :: gdc,gdc2
    real(kind=kind_phys),  dimension( im , km ),     intent(out ) :: cnvw_moist,cnvc
    real(kind=kind_phys),  dimension( im , km ), intent(inout ) :: cliw, clcw
+   real(kind=kind_phys),  dimension( im , km, ntr+2), intent(inout) :: clw
+   real(kind=kind_phys),  dimension( ntc ), intent(in) :: fscav
 
    real(kind=kind_phys),  dimension(  : ,  : ), intent(inout ) :: &
                du3dt_SCNV,dv3dt_SCNV,dt3dt_SCNV,dq3dt_SCNV, &
@@ -133,10 +138,10 @@ contains
    real(kind=kind_phys), intent(in   ) :: dt 
 
    integer, intent(in   ) :: imfshalcnv
+   integer, dimension(im),intent(inout) :: cactiv
    character(len=*), intent(out) :: errmsg
    integer,          intent(out) :: errflg
 !  define locally for now.
-   integer, dimension(im),intent(inout) :: cactiv
    integer, dimension(im) :: k22_shallow,kbcon_shallow,ktop_shallow
    real(kind=kind_phys),    dimension(im) :: ht
    real(kind=kind_phys),    dimension(im) :: dx
@@ -498,6 +503,8 @@ contains
                          zus,xmbs,kbcons,ktops,k22s,ierrs,ierrcs,                &
 ! output tendencies
                          outts,outqs,outqcs,outus,outvs,cnvwt,prets,cupclws,     &
+! chemical trancer convective transport
+                         ntr,ntc,itc,clw,fscav,wetdpc_shal,                      &
 ! dimesnional variables
                          itf,ktf,its,ite, kts,kte,ipr,tropics)
 
@@ -563,6 +570,13 @@ contains
               ,kbconm        &
               ,ktopm         &
               ,cupclwm       &
+! chemical trancer convective transport
+              ,ntr           &
+              ,ntc           &
+              ,itc           &
+              ,clw           &
+              ,fscav         &
+              ,wetdpc_mid    &
               ,ierrm         &
               ,ierrcm        &
 !    the following should be set to zero if not available
@@ -644,19 +658,26 @@ contains
               ,kbcon        &
               ,ktop         &
               ,cupclw       &
+! chemical trancer convective transport
+              ,ntr          &
+              ,ntc          &
+              ,itc          &
+              ,clw          &
+              ,fscav        &
+              ,wetdpc_deep  &
               ,ierr         &
               ,ierrc        &
 !    the following should be set to zero if not available
-              ,rand_mom      & ! for stochastics mom, if temporal and spatial patterns exist
-              ,rand_vmas     & ! for stochastics vertmass, if temporal and spatial patterns exist
-              ,rand_clos     & ! for stochastics closures, if temporal and spatial patterns exist
-              ,0             & ! flag to what you want perturbed
-                               ! 1 = momentum transport 
-                               ! 2 = normalized vertical mass flux profile
-                               ! 3 = closures
-                               ! more is possible, talk to developer or
-                               ! implement yourself. pattern is expected to be
-                               ! betwee -1 and +1
+              ,rand_mom     & ! for stochastics mom, if temporal and spatial patterns exist
+              ,rand_vmas    & ! for stochastics vertmass, if temporal and spatial patterns exist
+              ,rand_clos    & ! for stochastics closures, if temporal and spatial patterns exist
+              ,0            & ! flag to what you want perturbed
+                              ! 1 = momentum transport 
+                              ! 2 = normalized vertical mass flux profile
+                              ! 3 = closures
+                              ! more is possible, talk to developer or
+                              ! implement yourself. pattern is expected to be
+                              ! betwee -1 and +1
 #if ( wrf_dfi_radar == 1 )
               ,do_capsuppress,cap_suppress_j &
 #endif
