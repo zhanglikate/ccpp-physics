@@ -20,7 +20,19 @@ contains
 
 !> \brief Brief description of the subroutine
 !!
-      subroutine gsd_chem_plume_wrapper_init()
+      subroutine gsd_chem_plume_wrapper_init(ca_global_emis,im,emis_multiplier,errmsg,errflg)
+        implicit none
+        logical, intent(in) :: ca_global_emis
+        real, intent(out) :: emis_multiplier(:)
+        character(len=*), intent(out) :: errmsg
+        integer, intent(out) :: errflg, im
+
+        errmsg=''
+        errflg=0
+
+        if(ca_global_emis) then
+          emis_multiplier=1.0
+        endif
       end subroutine gsd_chem_plume_wrapper_init
 
 !> \brief Brief description of the subroutine
@@ -46,6 +58,7 @@ contains
                    ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,ebu,abem,                                            &
                    biomass_burn_opt_in,plumerise_flag_in,plumerisefire_frq_in,   &
+                   emis_multiplier, ca1, ca_global_emis,                         &
                    errmsg,errflg)
 
     implicit none
@@ -59,6 +72,9 @@ contains
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
+    logical,        intent(in) :: ca_global_emis
+    real, optional, intent(inout) :: emis_multiplier(:)
+    real, intent(in)    :: ca1(im)
     integer, dimension(im), intent(in) :: vegtype    
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
     real(kind_phys), dimension(im,   13), intent(in) :: fire_MODIS
@@ -97,8 +113,8 @@ contains
     real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
 
 !>-- local variables
-    real(kind_phys) :: curr_secs
-    real(kind_phys) :: factor, factor2, factor3
+    real(kind_phys) :: curr_secs, ca1_scaled
+    real(kind_phys) :: factor, factor2, factor3, random_factor(ims:im)
     integer :: nbegin
     integer :: i, j, jp, k, kp, n
   
@@ -109,7 +125,7 @@ contains
     biomass_burn_opt  = biomass_burn_opt_in
     plumerise_flag    = plumerise_flag_in
     plumerisefire_frq = plumerisefire_frq_in
-
+    random_factor = 1.0
     curr_secs = ktau * dt
 
     ! -- set domain
@@ -171,6 +187,20 @@ contains
     ! -- add biomass burning emissions at every timestep
     if (biomass_burn_opt == BURN_OPT_ENABLE) then
       jp = jte
+
+      if (ca_global_emis .and. plumerise_flag == FIRE_OPT_GBBEPx) then
+        do i = ims, im
+          ! ca1(i) is always precisely 0 or 2
+          if(ca1(i)<1.0) then
+            ca1_scaled=0.9
+          else
+            ca1_scaled=1.0/0.9
+          endif
+          emis_multiplier(i) = max(0.5,min(1.5,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
+          random_factor(i) = emis_multiplier(i)
+        enddo
+      endif
+
       factor3 = 0._kind_phys
       select case (plumerise_flag)
         case (FIRE_OPT_MODIS)
@@ -196,6 +226,9 @@ contains
             ! -- factor for pm emissions, factor2 for burn emissions
             factor  = dt*rri(i,k,j)/dz8w(i,k,j)
             factor2 = factor * factor3
+              if(plumerise_flag==FIRE_OPT_GBBEPx) then
+                factor2 = factor2 * random_factor(i)
+              endif
             chem(i,k,j,p_oc1) = chem(i,k,j,p_oc1) + factor  * ebu_in(i,j,p_ebu_in_oc  )
             chem(i,k,j,p_bc1) = chem(i,k,j,p_bc1) + factor  * ebu_in(i,j,p_ebu_in_bc  )
             chem(i,k,j,p_p25) = chem(i,k,j,p_p25) + factor  * ebu_in(i,j,p_ebu_in_pm25)
@@ -212,6 +245,9 @@ contains
               ! -- factor for pm emissions, factor2 for burn emissions
               factor  = dt*rri(i,k,j)/dz8w(i,k,j)
               factor2 = factor * factor3
+              if(plumerise_flag==FIRE_OPT_GBBEPx) then
+                factor2 = factor2 * random_factor(i)
+              endif
               chem(i,k,j,p_oc1) = chem(i,k,j,p_oc1) + factor  * ebu(i,k,j,p_ebu_oc  )
               chem(i,k,j,p_bc1) = chem(i,k,j,p_bc1) + factor  * ebu(i,k,j,p_ebu_bc  )
               chem(i,k,j,p_p25) = chem(i,k,j,p_p25) + factor  * ebu(i,k,j,p_ebu_pm25)
