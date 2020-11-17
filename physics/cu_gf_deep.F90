@@ -6,6 +6,7 @@
 !! This is Grell-Freitas deep convection scheme module
 module cu_gf_deep
      use machine , only : kind_phys
+     use physcons, only : qamin
      real(kind=kind_phys), parameter::g=9.81
      real(kind=kind_phys), parameter:: cp=1004.
      real(kind=kind_phys), parameter:: xlv=2.5e6
@@ -97,6 +98,12 @@ contains
               ,kbcon         &  ! lfc of parcel from k22
               ,ktop          &  ! cloud top
               ,cupclw        &  ! used for direct coupling to radiation, but with tuning factors
+              ,ntr           &  ! chemical trancer convective transport
+              ,ntc           &
+              ,itc           &
+              ,clw           &
+              ,fscav         &
+              ,wetdpc_deep   &  ! (wetdpc_mid when imid_gf==1)
               ,ierr          &  ! ierr flags are error flags, used for debugging
               ,ierrc         &  ! the following should be set to zero if not available
               ,rand_mom      &  ! for stochastics mom, if temporal and spatial patterns exist
@@ -117,10 +124,9 @@ contains
 
    implicit none
 
-     integer                                                &
-        ,intent (in   )                   ::                &
-        nranflag,itf,ktf,its,ite, kts,kte,ipr,imid
-     integer, intent (in   )              ::                &
+     integer, intent (in   )                   ::                 &
+        nranflag,itf,ktf,its,ite, kts,kte,ipr,imid,ntr,ntc,itc
+     integer, intent (in   )              ::                      &
         ichoice
      real(kind=kind_phys),  dimension (its:ite,4)                 &
         ,intent (in  )                   ::  rand_clos
@@ -145,6 +151,9 @@ contains
   ! outq   = output q tendency (per s)
   ! outqc  = output qc tendency (per s)
   ! pre    = output precip
+     real(kind=kind_phys),    dimension (its:ite,kts:kte,1:ntr+2), intent (inout) :: clw
+     real(kind=kind_phys),    dimension (its:ite,1:ntc), intent (out) :: wetdpc_deep
+     real(kind=kind_phys),    dimension (ntc ), intent(in) :: fscav
      real(kind=kind_phys),    dimension (its:ite,kts:kte)                              &
         ,intent (inout  )                   ::                         &
         cnvwt,outu,outv,outt,outq,outqc,cupclw
@@ -261,10 +270,20 @@ contains
   ! xmb    = total base mass flux
   ! hc = cloud moist static energy
   ! hkb = moist static energy at originating level
+     real(kind=kind_phys), dimension (its:ite,kts:kte,ntc) ::           &
+         chem,chem_pwdout,chem_pwout
+     real(kind=kind_phys), dimension (its:ite,kts:kte,ntc) ::           &
+         chem_cup,chem_up,chem_down,dellac,dellac2,chem_c,chem_pw,chem_pwd
+     real(kind=kind_phys), dimension (its:ite,ntc)   ::                 &
+         chem_pwav,chem_psum
+     real(kind=kind_phys):: dtime_max,sum1,sum2
+     real(kind=kind_phys), dimension (kts:kte) :: trac,trcflx_in,trcflx_out,trc,trco
+     integer :: nv, it
+     logical do_aerosols
 
-     real(kind=kind_phys),    dimension (its:ite,kts:kte) ::                            &
-        entr_rate_2d,mentrd_rate_2d,he,hes,qes,z, heo,heso,qeso,zo,     &                    
-        xhe,xhes,xqes,xz,xt,xq,qes_cup,q_cup,he_cup,hes_cup,z_cup,      &
+     real(kind=kind_phys),    dimension (its:ite,kts:kte) ::                   &
+        entr_rate_2d,mentrd_rate_2d,he,hes,qes,z, heo,heso,qeso,zo,            &                    
+        pwdper,xhe,xhes,xqes,xz,xt,xq,qes_cup,q_cup,he_cup,hes_cup,z_cup,      &
         p_cup,gamma_cup,t_cup, qeso_cup,qo_cup,heo_cup,heso_cup,        &
         zo_cup,po_cup,gammao_cup,tn_cup,                                &    
         xqes_cup,xq_cup,xhe_cup,xhes_cup,xz_cup,                        &
@@ -319,7 +338,7 @@ contains
      character*50 :: ierrc(its:ite)
      character*4  :: cumulus
      real(kind=kind_phys),    dimension (its:ite,kts:kte) ::                              &
-       up_massentr,up_massdetr,c1d                                        &
+       up_massentr,up_massdetr,c1d,massflx                                                &
       ,up_massentro,up_massdetro,dd_massentro,dd_massdetro
      real(kind=kind_phys),    dimension (its:ite,kts:kte) ::                              &
        up_massentru,up_massdetru,dd_massentru,dd_massdetru
@@ -1961,6 +1980,180 @@ contains
              enddo
           endif
       enddo
+!
+!
+!>- atmospheric composition tracers
+!
+!>  ## Determine whether to perform aerosol transport
+        do_aerosols = (itc > 0) .and. (ntc > 0) .and. (ntr > 0)
+        if (do_aerosols) do_aerosols = (ntr >= itc + ntc - 3)
+
+        if (do_aerosols) then
+!
+! initialize tracers if they exist
+!
+         chem (:,:,:) = 0.
+         do nv = 1, ntc
+          it = nv + itc - 1
+          do k = 1, ktf
+           do i = 1, itf
+            if (k <= ktop(i)) chem(i,k,nv) = max(qamin, clw(i,k,it))
+           enddo
+          enddo
+         enddo
+
+         wetdpc_deep = 0.
+
+         chem_pwav(:,:)   = 0.
+         chem_psum(:,:)   = 0.
+         chem_pw  (:,:,:) = 0.
+         chem_pwd (:,:,:) = 0.
+         pwdper   (:,:)   = 0.
+         chem_down(:,:,:) = 0.
+         chem_up  (:,:,:) = 0.
+         chem_cup (:,:,:) = 0.
+
+         do i=its,itf
+           if(ierr(i).eq.0)then
+           do k=kts,jmin(i)
+              pwdper(i,k)=-edtc(i,1)*pwdo(i,k)/pwavo(i)
+           enddo
+
+           do nv=1,ntc
+             do k=kts+1,ktf
+                chem_cup(i,k,nv)=.5*(chem(i,k-1,nv)+chem(i,k,nv))
+             enddo
+             chem_cup(i,kts,nv)=chem(i,kts,nv)
+!
+! in updraft  
+!
+             do k=1,k22(i)
+                chem_up(i,k,nv)=chem_cup(i,k,nv)
+             enddo
+             do k=k22(i)+1,ktop(i)
+                chem_up(i,k,nv)=(chem_up(i,k-1,nv)*zuo(i,k-1)                   &
+                         -.5*up_massdetr(i,k-1)*chem_up(i,k-1,nv)+              &
+                         up_massentr(i,k-1)*chem(i,k-1,nv))   /                 &
+                         (zuo(i,k-1)-.5*up_massdetr(i,k-1)+up_massentr(i,k-1))
+                chem_c(i,k,nv)=fscav(nv)*chem_up(i,k,nv)
+                dz=zo_cup(i,K)-zo_cup(i,K-1)
+                chem_pw(i,k,nv)=min(chem_up(i,k,nv),chem_c(i,k,nv)*pwo(i,k)/zuo(i,k)/(1.e-8+qrco(i,k)))
+                chem_up(i,k,nv)=chem_up(i,k,nv)-chem_pw(i,k,nv)
+                chem_pwav(i,nv)=chem_pwav(i,nv)+chem_pw(i,k,nv)! *g/dp
+              enddo
+              do k=ktop(i)+1,ktf
+                 chem_up(i,k,nv)=chem_cup(i,k,nv)
+              enddo
+!
+! in downdraft
+!
+               chem_down(i,jmin(i)+1,nv)=chem_cup(i,jmin(i)+1,nv)
+               chem_psum(i,nv)=0.
+               do ki=jmin(i),2,-1
+                 dp=100.*(po_cup(i,ki)-po_cup(i,ki+1))
+                 chem_down(i,ki,nv)=(chem_down(i,ki+1,nv)*zdo(i,ki+1)          &
+                       -.5*dd_massdetro(i,ki)*chem_down(i,ki+1,nv)+            &
+                       dd_massentro(i,ki)*chem(i,ki,nv))   /                   &
+                       (zdo(i,ki+1)-.5*dd_massdetro(i,ki)+dd_massentro(i,ki))
+                 chem_down(i,ki,nv)=chem_down(i,ki,nv)+pwdper(i,ki)*chem_pwav(i,nv)
+                 chem_pwd(i,ki,nv)=max(0.,pwdper(i,ki)*chem_pwav(i,nv))
+               enddo
+!   total wet deposition
+               do k=1,ktf-1
+                  dp=100.*(po_cup(i,k)-po_cup(i,k+1))
+                  chem_psum(i,nv)=chem_psum(i,nv)+chem_pw(i,k,nv)*g !/dp
+               enddo
+               chem_psum(i,nv)=chem_psum(i,nv)*xmb(i)*dtime
+!
+              enddo ! ntc
+            endif ! ierr=0
+          enddo ! i
+
+      dellac(:,:,:)=0.
+ 
+      do nv=1,ntc
+      do i=its,itf
+        if(ierr(i).eq.0)then
+          dp=100.*(po_cup(i,1)-po_cup(i,2))
+          dellac(i,1,nv)=dellac(i,1,nv)+(edto(i)*zdo(i,2)*chem_down(i,2,nv))*g/dp*xmb(i)
+          if(k22(i).eq.2)then
+             entupk=zuo(i,2)
+             dellac(i,1,nv)=dellac(i,1,nv)-entupk*chem_cup(i,2,nv)*g/dp*xmb(i)
+          endif
+          do k=kts+1,ktop(i)
+               detdo=0.
+               entdo=0.
+               dp=100.*(po_cup(i,k)-po_cup(i,k+1))
+            !  entrainment/detrainment for updraft
+               entdo=edto(i)*dd_massentro(i,k)*chem(i,k,nv)
+               detdo=edto(i)*dd_massdetro(i,k)*.5*(chem_down(i,k+1,nv)+chem_down(i,k,nv))
+               entup=up_massentro(i,k)*chem(i,k,nv)
+               detup=up_massdetro(i,k)*.5*(chem_up(i,k+1,nv)+chem_up(i,k,nv))
+            !  special levels
+               if(k == k22(i)-1) then
+                  entup=zuo(i,k+1)*chem_cup(i,k+1,nv)
+                  detup=0.
+               endif
+               if(k.eq.ktop(i)) then
+                  detup=zuo(i,ktop(i))*chem_up(i,ktop(i),nv)
+                  detdo=0.
+                  entup=0.
+               endif
+               if(k.eq.jmin(i))entdo=edto(i)*zdo(i,k)*chem_cup(i,k,nv)
+! mass budget
+               dellac(i,k,nv) =dellac(i,k,nv) + (detup-entup)*g/dp*xmb(i)
+          enddo
+         endif ! ierr
+       enddo ! i
+       enddo ! ntc loop
+
+! fct for subsidence
+      dellac2(:,:,:)=0.
+      massflx(:,:)=0.
+      do nv=1,ntc
+      do i=its,itf
+        if(ierr(i).eq.0)then
+         trcflx_in(:)=0.
+         dtime_max=dtime
+
+! initialize fct routine
+         do k=kts,ktop(i)
+            dp=100.*(po_cup(i,k)-po_cup(i,k+1))
+            dtime_max=min(dtime_max,.5*dp)
+            massflx(i,k)=-xmb(i)*(zuo(i,k)-edto(i)*zdo(i,k))
+            trcflx_in(k)=massflx(i,k)*0.5*(chem(i,k,nv)+chem(i,k+1,nv))
+         enddo
+         trcflx_in(1)=0.
+         massflx(i,1)=0.
+         call fct1d3(ktop(i),kte,dtime_max,po_cup(i,:),chem(i,:,nv),massflx(i,:),   &
+                     trcflx_in,dellac2(i,:,nv),g)
+
+         do k=kts,ktf
+           chem (i,k,nv)=chem (i,k,nv) + (dellac(i,k,nv)+dellac2(i,k,nv))*dtime
+         enddo
+        endif
+
+       enddo ! i
+       enddo ! ntc loop
+
+!> - Store aerosol concentrations if present
+       do nv = 1, ntc
+        kk = nv + itc - 1
+        do k = 1, ktf
+         do i = 1, itf
+          if(ierr(i).eq.0) then
+            if (k <= ktop(i)) then 
+             dp=100.*(po_cup(i,k)-po_cup(i,k+1))
+             wetdpc_deep(i,nv)=wetdpc_deep(i,nv) + ((clw(i,k,kk)-chem(i,k,nv))*dp/(g*dtime))
+             clw(i,k,kk) = chem(i,k,nv)
+            endif
+           endif
+          enddo
+         enddo
+        enddo
+
+      endif ! do_aerosols
+!
 ! rain evaporation as in sas
 !
       if(irainevap.eq.1)then
