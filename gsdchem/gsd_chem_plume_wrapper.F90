@@ -20,9 +20,9 @@ contains
 
 !> \brief Brief description of the subroutine
 !!
-      subroutine gsd_chem_plume_wrapper_init(ca_global_emis,im,emis_multiplier,errmsg,errflg)
+      subroutine gsd_chem_plume_wrapper_init(ca_global_emis,do_sppt_emis,im,emis_multiplier,errmsg,errflg)
         implicit none
-        logical, intent(in) :: ca_global_emis
+        logical, intent(in) :: ca_global_emis, do_sppt_emis
         real, intent(out) :: emis_multiplier(:)
         character(len=*), intent(out) :: errmsg
         integer, intent(out) :: errflg, im
@@ -30,7 +30,7 @@ contains
         errmsg=''
         errflg=0
 
-        if(ca_global_emis) then
+        if(ca_global_emis .or. do_sppt_emis) then
           emis_multiplier=1.0
         endif
       end subroutine gsd_chem_plume_wrapper_init
@@ -58,7 +58,7 @@ contains
                    ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,ebu,abem,                                            &
                    biomass_burn_opt_in,plumerise_flag_in,plumerisefire_frq_in,   &
-                   emis_multiplier, ca1, ca_global_emis,                         &
+                   emis_multiplier, ca1, ca_global_emis, do_sppt_emis, sppt_wts, &
                    errmsg,errflg)
 
     implicit none
@@ -72,12 +72,13 @@ contains
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
-    logical,        intent(in) :: ca_global_emis
+    logical,        intent(in) :: ca_global_emis, do_sppt_emis
     real, optional, intent(inout) :: emis_multiplier(:)
     real, intent(in)    :: ca1(im)
     integer, dimension(im), intent(in) :: vegtype    
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
     real(kind_phys), dimension(im,   13), intent(in) :: fire_MODIS
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum, w
@@ -188,7 +189,13 @@ contains
     if (biomass_burn_opt == BURN_OPT_ENABLE) then
       jp = jte
 
-      if (ca_global_emis .and. plumerise_flag == FIRE_OPT_GBBEPx) then
+      if(plumerise_flag == FIRE_OPT_GBBEPx) then
+       if (do_sppt_emis) then
+        do i = ims, im
+          emis_multiplier(i) = max(0.5,min(1.5,sppt_wts(i,kme/2)))
+          random_factor(i) = emis_multiplier(i)
+        enddo
+       elseif (ca_global_emis) then
         do i = ims, im
           ! ca1(i) is always precisely 0 or 2
           if(ca1(i)<1.0) then
@@ -199,6 +206,7 @@ contains
           emis_multiplier(i) = max(0.5,min(1.5,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
           random_factor(i) = emis_multiplier(i)
         enddo
+       endif
       endif
 
       factor3 = 0._kind_phys

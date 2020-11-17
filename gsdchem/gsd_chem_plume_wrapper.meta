@@ -15,6 +15,14 @@
   type = logical
   intent = in
   optional = F
+[do_sppt_emis]
+  standard_name = flag_for_stochastic_emissions_perturbations
+  long_name = flag for stochastic emissions perturbations
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
 [im]
   standard_name = horizontal_dimension
   long_name = horizontal dimension
@@ -339,6 +347,23 @@
   units = flag
   dimensions = ()
   type = logical
+  intent = in
+  optional = F
+[do_sppt_emis]
+  standard_name = flag_for_stochastic_emissions_perturbations
+  long_name = flag for stochastic emissions perturbations
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[sppt_wts]
+  standard_name = weights_for_stochastic_sppt_perturbation
+  long_name = weights for stochastic sppt perturbation
+  units = none
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
   intent = in
   optional = F
 [errmsg]
