@@ -7,6 +7,56 @@
 [ccpp-arg-table]
   name = gsd_chem_plume_wrapper_init
   type = scheme
+[ca_global_emis]
+  standard_name = flag_for_tracer_emissions_global_cellular_automata
+  long_name = switch for global ca applied to chemical tracer emissions
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[do_sppt_emis]
+  standard_name = flag_for_stochastic_emissions_perturbations
+  long_name = flag for stochastic emissions perturbations
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[im]
+  standard_name = horizontal_dimension
+  long_name = horizontal dimension
+  units = count
+  dimensions = ()
+  type = integer
+  intent = in
+  optional = F
+[emis_multiplier]
+  standard_name = gsd_chem_ca_global_emis_multiplier
+  long_name = fraction of emissions to generate based on cellular automata
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = out
+  optional = F
+[errmsg]
+  standard_name = ccpp_error_message
+  long_name = error message for error handling in CCPP
+  units = none
+  dimensions = ()
+  type = character
+  kind = len=*
+  intent = out
+  optional = F
+[errflg]
+  standard_name = ccpp_error_flag
+  long_name = error flag for error handling in CCPP
+  units = flag
+  dimensions = ()
+  type = integer
+  intent = out
+  optional = F
 
 ########################################################################
 [ccpp-arg-table]
@@ -271,6 +321,49 @@
   units = index
   dimensions = ()
   type = integer
+  intent = in
+  optional = F
+[emis_multiplier]
+  standard_name = gsd_chem_ca_global_emis_multiplier
+  long_name = fraction of emissions to generate based on cellular automata
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = inout
+  optional = F
+[ca1]
+  standard_name = cellular_automata_global_pattern
+  long_name = cellular automata global pattern
+  units = flag
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
+[ca_global_emis]
+  standard_name = flag_for_tracer_emissions_global_cellular_automata
+  long_name = switch for global ca applied to chemical tracer emissions
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[do_sppt_emis]
+  standard_name = flag_for_stochastic_emissions_perturbations
+  long_name = flag for stochastic emissions perturbations
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[sppt_wts]
+  standard_name = weights_for_stochastic_sppt_perturbation
+  long_name = weights for stochastic sppt perturbation
+  units = none
+  dimensions = (horizontal_dimension,vertical_dimension)
+  type = real
+  kind = kind_phys
   intent = in
   optional = F
 [errmsg]
