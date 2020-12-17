@@ -30,6 +30,7 @@ CONTAINS
          v_phy,chem,rho_phy,dz8w,u10,v10,ustar,p8w,tsk,            &
          xland,xlat,xlong,area,g,emis_seas, &
          seashelp,num_emis_seas,num_moist,num_chem,seas_opt,  &
+         random_factor,                                            &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -52,7 +53,8 @@ CONTAINS
                                                        ustar,tsk,            &
                                                        xland,                &
                                                        xlat,                 &
-                                                       xlong,area
+                                                       xlong,area,           &
+                                                       random_factor
      REAL(kind=kind_phys),  DIMENSION( ims:ime , jms:jme ),                        &
             INTENT(OUT   ) :: seashelp
      REAL(kind=kind_phys),  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
@@ -89,7 +91,8 @@ CONTAINS
     real(kind=kind_phys), dimension(1,1,1) :: airmas1
     real(kind=kind_phys), dimension(1,1,1,number_ss_bins) :: tc1
     real(kind=kind_phys), dimension(1,1,number_ss_bins) :: bems1
-    
+    real(kind=kind_phys), allocatable :: random_factor2(:)
+    real(kind=kind_phys) :: one
 !
 ! local parameters
 !
@@ -101,9 +104,9 @@ CONTAINS
     imx=1
     jmx=1
     lmx=1
-
     chem_config=CHEM_OPT_GOCART
 
+    one = 1.0
     emis_seas = 0.
 
 !   select case (config % chem_opt)
@@ -238,11 +241,11 @@ CONTAINS
                   end do
 
                   ! -- add sea salt emission increments to existing airborne concentrations
-                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi
-                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi
-                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi
-                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
-                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
+                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi*random_factor(i,j)
+                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi*random_factor(i,j)
+                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi*random_factor(i,j)
+                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi*random_factor(i,j)
+                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi*random_factor(i,j)
 
                   ! for output diagnostics kg/m2/s
                   emis_seas(i,1,j,p_eseas1) = bems(1)

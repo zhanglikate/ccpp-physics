@@ -42,6 +42,7 @@ contains
                    pr3d, ph3d,phl3d, prl3d, tk3d, spechum,emi_in,                       &
                    ntrac,ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,abem,chem_opt_in,kemit_in,                                  &
+                   emis_multiplier, do_sppt_emis, ca_global_emis,                       &
                    errmsg,errflg)
 
     implicit none
@@ -52,6 +53,9 @@ contains
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     integer,        intent(in) :: ntsulf
     real(kind_phys),intent(in) :: dt
+
+    logical,        intent(in) :: ca_global_emis, do_sppt_emis
+    real, optional, intent(in) :: emis_multiplier(:)
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -69,7 +73,6 @@ contains
     real(kind_phys), dimension(1:im, 1:kme,jms:jme) :: rri, t_phy,       &
                      p_phy, z_at_w, dz8w, p8w, rho_phy
 
-
 !>- chemistry variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_chem )  :: chem
     integer :: ide, ime, ite, kde
@@ -79,6 +82,7 @@ contains
     real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
 
     integer :: i, j, jp, k, kp, n
+    real(kind_phys) :: random_factor(ims:im,jms:jme)
   
 
     errmsg = ''
@@ -98,6 +102,13 @@ contains
    !ppm2ugkg(p_so2 ) = 1.e+03_kind_phys * mw_so2_aer / mwdry
     ppm2ugkg(p_sulf) = 1.e+03_kind_phys * mw_so4_aer / mwdry
 
+    if(do_sppt_emis .or. ca_global_emis) then
+      do i = ims, im
+        random_factor(i,jms) = emis_multiplier(i)
+      enddo
+    else
+      random_factor = 1.0
+    endif
 
     ! -- compute accumulated large-scale and convective rainfall since last call
     if (ktau > 1) then
@@ -113,7 +124,7 @@ contains
         rri,t_phy,p_phy,rho_phy,dz8w,p8w,z_at_w,                        & 
         ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,ntrac,gq0,               &
         num_chem, num_ebu_in,num_emis_ant,                              &
-        emis_ant,ppm2ugkg,chem,                                         &
+        emis_ant,ppm2ugkg,chem,random_factor,                           &
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
@@ -156,7 +167,7 @@ contains
         rri,t_phy,p_phy,rho_phy,dz8w,p8w,z_at_w,                         &
         ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,ntrac,gq0,                &
         num_chem, num_ebu_in,num_emis_ant,                               &
-        emis_ant,ppm2ugkg,chem,                                          &
+        emis_ant,ppm2ugkg,chem,random_factor,                            &
         ids,ide, jds,jde, kds,kde,                                       &
         ims,ime, jms,jme, kms,kme,                                       &
         its,ite, jts,jte, kts,kte)
@@ -164,6 +175,9 @@ contains
     !Chem input configuration
     integer, intent(in) :: ktau
     real(kind=kind_phys), intent(in) :: dtstep
+
+    !Stochastic physics variables
+    real(kind_phys), intent(in) :: random_factor(ims:ime,jms:jme)
 
     !FV3 input variables
     integer, intent(in) :: ntrac
@@ -268,12 +282,12 @@ contains
     emiss_ab  = 0.   ! background
     do j=jts,jte
      do i=its,ite
-      emiss_ab(i,j,p_e_bc)   =emi_in(i,1)
-      emiss_ab(i,j,p_e_oc)   =emi_in(i,2)
-      emiss_ab(i,j,p_e_sulf) =emi_in(i,3)
-      emiss_ab(i,j,p_e_pm_25)=emi_in(i,4)
-      emiss_ab(i,j,p_e_so2)  =emi_in(i,5)
-      emiss_ab(i,j,p_e_pm_10)=emi_in(i,6)
+      emiss_ab(i,j,p_e_bc)   =emi_in(i,1)*random_factor(i,j)
+      emiss_ab(i,j,p_e_oc)   =emi_in(i,2)*random_factor(i,j)
+      emiss_ab(i,j,p_e_sulf) =emi_in(i,3)*random_factor(i,j)
+      emiss_ab(i,j,p_e_pm_25)=emi_in(i,4)*random_factor(i,j)
+      emiss_ab(i,j,p_e_so2)  =emi_in(i,5)*random_factor(i,j)
+      emiss_ab(i,j,p_e_pm_10)=emi_in(i,6)*random_factor(i,j)
      enddo
     enddo
 
