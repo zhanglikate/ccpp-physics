@@ -17,12 +17,24 @@
 
 contains
 
-!> \brief Does nothing.
+!> \brief Brief description of the subroutine
 !!
-      subroutine gsd_chem_seas_wrapper_init
+      subroutine gsd_chem_seas_wrapper_init(ca_global_emis,do_sppt_emis,im,emis_multiplier,errmsg,errflg)
+        implicit none
+        logical, intent(in) :: ca_global_emis, do_sppt_emis
+        real, intent(out) :: emis_multiplier(:)
+        character(len=*), intent(out) :: errmsg
+        integer, intent(out) :: errflg, im
+
+        errmsg=''
+        errflg=0
+
+        if(ca_global_emis .or. do_sppt_emis) then
+          emis_multiplier=1.0
+        endif
       end subroutine gsd_chem_seas_wrapper_init
 
-!> \brief Does nothing.
+!> \brief Brief description of the subroutine
 !!
 !! \section arg_table_gsd_chem_seas_wrapper_finalize Argument Table
 !!
@@ -44,7 +56,7 @@ contains
                    pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,               &
                    nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,              &
                    gq0,qgrs,ssem,seas_opt_in,                                 &
-                   emis_multiplier, ca_global_emis, do_sppt_emis,             &
+                   emis_multiplier, ca1, ca_global_emis, do_sppt_emis, sppt_wts, &
                    errmsg,errflg)
 
     implicit none
@@ -55,7 +67,10 @@ contains
     real(kind_phys),intent(in) :: dt
 
     logical,        intent(in) :: ca_global_emis, do_sppt_emis
-    real, optional, intent(in) :: emis_multiplier(:)
+    real, optional, intent(inout) :: emis_multiplier(:)
+    real, intent(in)    :: ca1(im)
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
+
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -110,8 +125,20 @@ contains
 
     random_factor = 1
 
-    if (do_sppt_emis .or. ca_global_emis) then
+    if (do_sppt_emis) then
       do i = ims, im
+        emis_multiplier(i) = max(0.5,min(1.5,sppt_wts(i,kme/2)))
+        random_factor(i,jms) = emis_multiplier(i)
+      enddo
+    elseif (ca_global_emis) then
+      do i = ims, im
+        ! ca1(i) is always precisely 0 or 2
+        if(ca1(i)<1.0) then
+          ca1_scaled=0.9
+        else
+          ca1_scaled=1.0/0.9
+        endif
+        emis_multiplier(i) = max(0.5,min(1.5,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
         random_factor(i,jms) = emis_multiplier(i)
       enddo
     endif
@@ -135,7 +162,7 @@ contains
         u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,ust,p8w,tsk,              &
         xland,xlat,xlong,dxy,g,emis_seas,                               &
         seashelp,num_emis_seas,num_moist,num_chem,seas_opt,             &
-        random_factor,                                                  &
+        random_factor,.false.,                                          &
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
