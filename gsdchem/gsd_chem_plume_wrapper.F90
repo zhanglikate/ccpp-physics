@@ -256,9 +256,9 @@ contains
      enddo
     enddo
 
-    abem(:,4)=ugkg*ebu_in  (:,kts,p_ebu_in_bc )
-    abem(:,5)=ugkg*ebu_in  (:,kts,p_ebu_in_oc )
-    abem(:,6)=ugkg*ebu_in  (:,kts,p_ebu_in_so2)
+    abem(:,4)=ugkg*ebu_in  (:,kts,p_ebu_in_bc )*random_factor(:)
+    abem(:,5)=ugkg*ebu_in  (:,kts,p_ebu_in_oc )*random_factor(:)
+    abem(:,6)=ugkg*ebu_in  (:,kts,p_ebu_in_so2)*random_factor(:)
 
 
    end subroutine gsd_chem_plume_wrapper_run

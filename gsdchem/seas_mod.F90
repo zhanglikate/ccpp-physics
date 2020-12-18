@@ -237,16 +237,16 @@ CONTAINS
 !                    if (chem_rc_test((rc /= 0), msg="Error in NGAC sea salt scheme", &
 !                      file=__FILE__, line=__LINE__)) return
 
-                    bems(n) = emission_scale(n) * fsstemis * memissions
+                    bems(n) = emission_scale(n) * fsstemis * memissions * random_factor(i,j)
                     tc(n) = bems(n) * dt * g / delp
                   end do
 
                   ! -- add sea salt emission increments to existing airborne concentrations
-                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi*random_factor(i,j)
-                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi*random_factor(i,j)
-                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi*random_factor(i,j)
-                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi*random_factor(i,j)
-                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi*random_factor(i,j)
+                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi
+                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi
+                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi
+                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
+                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
 
                   ! for output diagnostics kg/m2/s
                   emis_seas(i,1,j,p_eseas1) = bems(1)
