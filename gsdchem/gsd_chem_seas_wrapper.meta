@@ -333,6 +333,15 @@
   type = integer
   intent = in
   optional = F
+[emis_amp_seas]
+  standard_name = sea_spray_emissions_perturbation_amplitude
+  long_name = multiplier of emissions random perturbation of sea salt emissions
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
 [emis_multiplier]
   standard_name = gsd_chem_ca_global_emis_multiplier
   long_name = fraction of emissions to generate based on cellular automata

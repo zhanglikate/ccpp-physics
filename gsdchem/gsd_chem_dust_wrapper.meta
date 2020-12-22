@@ -439,6 +439,15 @@
   kind = kind_phys
   intent = in
   optional = F
+[emis_amp_dust]
+  standard_name = dust_emissions_perturbation_amplitude
+  long_name = multiplier of emissions random perturbation of dust emissions
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
 [emis_multiplier]
   standard_name = gsd_chem_ca_global_emis_multiplier
   long_name = fraction of emissions to generate based on cellular automata

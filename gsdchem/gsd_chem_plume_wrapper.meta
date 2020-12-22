@@ -273,6 +273,13 @@
   type = integer
   intent = in
   optional = F
+[emis_amp_plume]
+  standard_name = plume_emissions_perturbation_amplitude
+  long_name = multiplier of emissions random perturbation of plume rise emissions
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
 [emis_multiplier]
   standard_name = gsd_chem_ca_global_emis_multiplier
   long_name = fraction of emissions to generate based on cellular automata

@@ -55,9 +55,8 @@ contains
                    land, u10m, v10m, ustar, rlat, rlon, tskin,                &
                    pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,               &
                    nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,              &
-                   gq0,qgrs,ssem,seas_opt_in,                                 &
-                   emis_multiplier, ca1, ca_global_emis, do_sppt_emis, sppt_wts, &
-                   errmsg,errflg)
+                   gq0,qgrs,ssem,seas_opt_in, emis_amp_seas, emis_multiplier, &
+                   ca1, ca_global_emis, do_sppt_emis, sppt_wts, errmsg, errflg)
 
     implicit none
 
@@ -68,7 +67,7 @@ contains
 
     logical,        intent(in) :: ca_global_emis, do_sppt_emis
     real, optional, intent(inout) :: emis_multiplier(:)
-    real, intent(in)    :: ca1(im)
+    real, intent(in)    :: ca1(im), emis_amp_seas
     real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
 
 
@@ -127,8 +126,7 @@ contains
 
     if (do_sppt_emis) then
       do i = ims, im
-        emis_multiplier(i) = max(0.5,min(1.5,sppt_wts(i,kme/2)))
-        random_factor(i,jms) = emis_multiplier(i)
+        emis_multiplier(i) = sppt_wts(i,kme/2)
       enddo
     elseif (ca_global_emis) then
       do i = ims, im
@@ -138,8 +136,13 @@ contains
         else
           ca1_scaled=1.0/0.9
         endif
-        emis_multiplier(i) = max(0.5,min(1.5,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
-        random_factor(i,jms) = emis_multiplier(i)
+        emis_multiplier(i) = max(0.8,min(1.2,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
+      enddo
+    endif
+
+    if(do_sppt_emis .or. ca_global_emis) then
+      do i=ims,im
+        random_factor(i,jms) = min(10.0,max(0.0,(emis_multiplier(i)-1.0)*emis_amp_seas + 1.0))
       enddo
     endif
 
