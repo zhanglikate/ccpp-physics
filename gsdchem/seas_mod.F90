@@ -30,6 +30,7 @@ CONTAINS
          v_phy,chem,rho_phy,dz8w,u10,v10,ustar,p8w,tsk,            &
          xland,xlat,xlong,area,g,emis_seas, &
          seashelp,num_emis_seas,num_moist,num_chem,seas_opt,  &
+         random_factor,use_random_factor,                          &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -52,7 +53,9 @@ CONTAINS
                                                        ustar,tsk,            &
                                                        xland,                &
                                                        xlat,                 &
-                                                       xlong,area
+                                                       xlong,area,           &
+                                                       random_factor
+     LOGICAL, INTENT(IN) ::                        use_random_factor
      REAL(kind=kind_phys),  DIMENSION( ims:ime , jms:jme ),                        &
             INTENT(OUT   ) :: seashelp
      REAL(kind=kind_phys),  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
@@ -89,7 +92,8 @@ CONTAINS
     real(kind=kind_phys), dimension(1,1,1) :: airmas1
     real(kind=kind_phys), dimension(1,1,1,number_ss_bins) :: tc1
     real(kind=kind_phys), dimension(1,1,number_ss_bins) :: bems1
-    
+    real(kind=kind_phys), allocatable :: random_factor2(:)
+    real(kind=kind_phys) :: one
 !
 ! local parameters
 !
@@ -101,9 +105,9 @@ CONTAINS
     imx=1
     jmx=1
     lmx=1
-
     chem_config=CHEM_OPT_GOCART
 
+    one = 1.0
     emis_seas = 0.
 
 !   select case (config % chem_opt)
@@ -233,7 +237,7 @@ CONTAINS
 !                    if (chem_rc_test((rc /= 0), msg="Error in NGAC sea salt scheme", &
 !                      file=__FILE__, line=__LINE__)) return
 
-                    bems(n) = emission_scale(n) * fsstemis * memissions
+                    bems(n) = emission_scale(n) * fsstemis * memissions * random_factor(i,j)
                     tc(n) = bems(n) * dt * g / delp
                   end do
 

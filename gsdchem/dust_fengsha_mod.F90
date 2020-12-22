@@ -22,6 +22,7 @@ contains
        isltyp,vegfra,snowh,xland,area,g,emis_dust,       &
        ust,znt,clay,sand,rdrag,uthr,                     &
        num_emis_dust,num_moist,num_chem,num_soil_layers, &
+       random_factor,                                    &
        ids,ide, jds,jde, kds,kde,                        &
        ims,ime, jms,jme, kms,kme,                        &
        its,ite, jts,jte, kts,kte)
@@ -32,6 +33,8 @@ contains
          ims,ime, jms,jme, kms,kme,                      &
          its,ite, jts,jte, kts,kte,                      &
          num_emis_dust,num_moist,num_chem,num_soil_layers
+
+    real(kind_phys), dimension(ims:ime,jms:jme), intent(in) :: random_factor
     INTEGER,DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: isltyp
     REAL(kind_phys), DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ), INTENT(INOUT) :: chem
     REAL(kind_phys), DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL, INTENT(INOUT) :: emis_dust
@@ -172,7 +175,7 @@ contains
              ! Call dust emission routine.
              call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, & 
                   erodtot, dxy, gravsm, airden, airmas, &
-                  bems, g, drylimit, dust_alpha, dust_gamma, R, uthr(i,j))
+                  bems, g, drylimit, dust_alpha, dust_gamma, R, uthr(i,j), random_factor(i,j))
 
              !    if(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
              !     dustin(i,j,1:5)=tc(1:5)*converi
@@ -207,7 +210,7 @@ contains
 
   SUBROUTINE source_dust(imx, jmx, lmx, nmx, smx, dt1, tc, ustar, massfrac, &
        erod, dxy, gravsm, airden, airmas, bems, g0, drylimit, alpha,  &
-       gamma, R, uthres)
+       gamma, R, uthres, random_factor)
 
     ! ****************************************************************************
     ! *  Evaluate the source of each dust particles size bin by soil emission
@@ -280,6 +283,7 @@ contains
     REAL(kind_phys), INTENT(IN)    :: erod(imx,jmx)
     REAL(kind_phys), INTENT(IN)    :: dxy(jmx)
     REAL(kind_phys), INTENT(IN)    :: gravsm(imx,jmx)
+    REAL(kind_phys), INTENT(IN)    :: random_factor(imx,jmx)
     REAL(kind_phys), INTENT(IN)    :: airden(imx,jmx,lmx)
     REAL(kind_phys), INTENT(IN)    :: airmas(imx,jmx,lmx)
     REAL(kind_phys), INTENT(OUT)   :: bems(imx,jmx,nmx)
@@ -457,7 +461,7 @@ contains
        DO i=1,imx
           DO j=1,jmx
              ! Calculate total mass emitted
-             dsrc = emit_vol*den_dust(n)*distr_dust(n)*dxy(j)*dt1  ! (kg)
+             dsrc = emit_vol*den_dust(n)*distr_dust(n)*dxy(j)*dt1 *random_factor(i,j)  ! (kg)
              IF (dsrc < 0.0) dsrc = 0.0
 
              ! Update dust mixing ratio at first model level.

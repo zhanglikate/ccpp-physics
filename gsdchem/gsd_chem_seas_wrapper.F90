@@ -19,7 +19,19 @@ contains
 
 !> \brief Brief description of the subroutine
 !!
-      subroutine gsd_chem_seas_wrapper_init()
+      subroutine gsd_chem_seas_wrapper_init(ca_global_emis,do_sppt_emis,im,emis_multiplier,errmsg,errflg)
+        implicit none
+        logical, intent(in) :: ca_global_emis, do_sppt_emis
+        real, intent(out) :: emis_multiplier(:)
+        character(len=*), intent(out) :: errmsg
+        integer, intent(out) :: errflg, im
+
+        errmsg=''
+        errflg=0
+
+        if(ca_global_emis .or. do_sppt_emis) then
+          emis_multiplier=1.0
+        endif
       end subroutine gsd_chem_seas_wrapper_init
 
 !> \brief Brief description of the subroutine
@@ -44,6 +56,7 @@ contains
                    pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,               &
                    nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,              &
                    gq0,qgrs,ssem,seas_opt_in,                                 &
+                   emis_multiplier, ca1, ca_global_emis, do_sppt_emis, sppt_wts, &
                    errmsg,errflg)
 
     implicit none
@@ -52,6 +65,12 @@ contains
     integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
     real(kind_phys),intent(in) :: dt
+
+    logical,        intent(in) :: ca_global_emis, do_sppt_emis
+    real, optional, intent(inout) :: emis_multiplier(:)
+    real, intent(in)    :: ca1(im)
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
+
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -82,6 +101,7 @@ contains
 
     integer :: ide, ime, ite, kde
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
+    real(kind_phys) :: ca1_scaled, random_factor(ims:im,jms:jme)
 
 !>-- local variables
     integer :: i, j, jp, k, kp, n
@@ -103,6 +123,26 @@ contains
    !ppm2ugkg(p_so2 ) = 1.e+03_kind_phys * mw_so2_aer / mwdry
     ppm2ugkg(p_sulf) = 1.e+03_kind_phys * mw_so4_aer / mwdry
 
+    random_factor = 1
+
+    if (do_sppt_emis) then
+      do i = ims, im
+        emis_multiplier(i) = max(0.5,min(1.5,sppt_wts(i,kme/2)))
+        random_factor(i,jms) = emis_multiplier(i)
+      enddo
+    elseif (ca_global_emis) then
+      do i = ims, im
+        ! ca1(i) is always precisely 0 or 2
+        if(ca1(i)<1.0) then
+          ca1_scaled=0.9
+        else
+          ca1_scaled=1.0/0.9
+        endif
+        emis_multiplier(i) = max(0.5,min(1.5,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
+        random_factor(i,jms) = emis_multiplier(i)
+      enddo
+    endif
+
 !>- get ready for chemistry run
     call gsd_chem_prep_seas(                                            &
         u10m,v10m,ustar,land,garea,rlat,rlon,tskin,                     &
@@ -122,6 +162,7 @@ contains
         u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,ust,p8w,tsk,              &
         xland,xlat,xlong,dxy,g,emis_seas,                               &
         seashelp,num_emis_seas,num_moist,num_chem,seas_opt,             &
+        random_factor,.false.,                                          &
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)

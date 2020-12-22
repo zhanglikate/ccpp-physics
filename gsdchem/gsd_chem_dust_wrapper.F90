@@ -51,6 +51,7 @@ contains
                    gq0,qgrs,duem,                                               &
                    chem_opt_in,dust_opt_in,dust_calcdrag_in,                    &
                    dust_alpha_in,dust_gamma_in,                                 &
+                   emis_multiplier, do_sppt_emis, ca_global_emis,               &
                    errmsg,errflg)
 
     implicit none
@@ -60,6 +61,9 @@ contains
     integer,        intent(in) :: nseasalt,ntrac
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ndust
     real(kind_phys),intent(in) :: dt
+
+    logical,        intent(in) :: ca_global_emis, do_sppt_emis
+    real, optional, intent(in) :: emis_multiplier(:)
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -115,6 +119,7 @@ contains
     logical :: store_arrays
     integer :: nbegin, nv, nvv
     integer :: i, j, jp, k, kp, n
+    real(kind_phys), dimension(ims:im,jms:jme) :: random_factor
   
 
     errmsg = ''
@@ -129,6 +134,14 @@ contains
     ime=im
     ite=im
     kde=kte
+
+    if(do_sppt_emis .or. ca_global_emis) then
+      do i = ims, im
+        random_factor(i,jms) = emis_multiplier(i)
+      enddo
+    else
+      random_factor = 1.0
+    endif
 
     ! -- volume to mass fraction conversion table (ppm -> ug/kg)
     ppm2ugkg         = 1._kind_phys
@@ -182,6 +195,7 @@ contains
             isltyp,vegfrac,snowh,xland,dxy,g,emis_dust,ust,znt,      &
             clayf,sandf,rdrag,uthr,                                     &
             num_emis_dust,num_moist,num_chem,nsoil,                     &
+            random_factor,                                              &
             ids,ide, jds,jde, kds,kde,                                  &
             ims,ime, jms,jme, kms,kme,                                  &
             its,ite, jts,jte, kts,kte)
