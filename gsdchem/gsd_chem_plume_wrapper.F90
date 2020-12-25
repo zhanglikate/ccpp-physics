@@ -46,15 +46,15 @@ contains
                    ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,ebu,abem,                                            &
                    biomass_burn_opt_in,plumerise_flag_in,plumerisefire_frq_in,   &
-                   emis_multiplier, do_sppt_emis, ca_global_emis,                &
-                   errmsg,errflg)
+                   emis_amp_plume, emis_multiplier, do_sppt_emis,                &
+                   ca_global_emis, errmsg,errflg)
 
     implicit none
 
 
     integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10
-    real(kind_phys),intent(in) :: dt
+    real(kind_phys),intent(in) :: dt, emis_amp_plume
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -177,7 +177,7 @@ contains
 
       if(plumerise_flag == FIRE_OPT_GBBEPx .and. (do_sppt_emis .or. ca_global_emis)) then
         do i = ims, im
-          random_factor(i) = emis_multiplier(i)
+          random_factor(i) = min(10.0,max(0.0,(emis_multiplier(i)-1.0)*emis_amp_plume + 1.0))
         enddo
       endif
 

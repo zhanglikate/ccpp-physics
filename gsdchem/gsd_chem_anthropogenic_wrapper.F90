@@ -42,7 +42,7 @@ contains
                    pr3d, ph3d,phl3d, prl3d, tk3d, spechum,emi_in,                       &
                    ntrac,ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,abem,chem_opt_in,kemit_in,                                  &
-                   emis_multiplier, do_sppt_emis, ca_global_emis,                       &
+                   emis_amp_anthro, emis_multiplier, do_sppt_emis, ca_global_emis,      &
                    errmsg,errflg)
 
     implicit none
@@ -52,7 +52,7 @@ contains
     integer,        intent(in) :: ntrac
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     integer,        intent(in) :: ntsulf
-    real(kind_phys),intent(in) :: dt
+    real(kind_phys),intent(in) :: dt, emis_amp_anthro
 
     logical,        intent(in) :: ca_global_emis, do_sppt_emis
     real, optional, intent(in) :: emis_multiplier(:)
@@ -104,7 +104,7 @@ contains
 
     if(do_sppt_emis .or. ca_global_emis) then
       do i = ims, im
-        random_factor(i,jms) = emis_multiplier(i)
+        random_factor(i,jms) = min(10.0,max(0.0,(emis_multiplier(i)-1.0)*emis_amp_anthro + 1.0))
       enddo
     else
       random_factor = 1.0
