@@ -50,7 +50,7 @@ contains
                    ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ndust,               &
                    gq0,qgrs,duem,                                               &
                    chem_opt_in,dust_opt_in,dust_calcdrag_in,                    &
-                   dust_alpha_in,dust_gamma_in,                                 &
+                   dust_alpha_in,dust_gamma_in,pert_scale_dust,                 &
                    emis_amp_dust, emis_multiplier, do_sppt_emis, ca_global_emis,&
                    errmsg,errflg)
 
@@ -60,7 +60,7 @@ contains
     integer,        intent(in) :: im,kte,kme,ktau,nsoil
     integer,        intent(in) :: nseasalt,ntrac
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ndust
-    real(kind_phys),intent(in) :: dt, emis_amp_dust
+    real(kind_phys),intent(in) :: dt, emis_amp_dust, pert_scale_dust
 
     logical,        intent(in) :: ca_global_emis, do_sppt_emis
     real, optional, intent(in) :: emis_multiplier(:)
@@ -137,7 +137,7 @@ contains
 
     if(do_sppt_emis .or. ca_global_emis) then
       do i = ims, im
-        random_factor(i,jms) = min(10.0,max(0.0,(emis_multiplier(i)-1.0)*emis_amp_dust + 1.0))
+        random_factor(i,jms) = min(10.0,max(0.0,((emis_multiplier(i)-1.0)*emis_amp_dust + 1.0)*pert_scale_dust))
       enddo
     else
       random_factor = 1.0

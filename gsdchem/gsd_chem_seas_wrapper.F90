@@ -51,15 +51,14 @@ contains
 !!
 !>\section gsd_chem_seas_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_seas_wrapper_run(im, kte, kme, ktau, dt, garea,       &
-                   land, u10m, v10m, ustar, rlat, rlon, tskin,                &
-                   pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,               &
-                   nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,              &
-                   gq0,qgrs,ssem,seas_opt_in, emis_amp_seas, emis_multiplier, &
+    subroutine gsd_chem_seas_wrapper_run(im, kte, kme, ktau, dt, garea,          &
+                   land, u10m, v10m, ustar, rlat, rlon, tskin,                   &
+                   pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,                  &
+                   nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,pert_scale_seas, &
+                   gq0,qgrs,ssem,seas_opt_in, emis_amp_seas, emis_multiplier,    &
                    ca1, ca_global_emis, do_sppt_emis, sppt_wts, errmsg, errflg)
 
     implicit none
-
 
     integer,        intent(in) :: im,kte,kme,ktau
     integer,        intent(in) :: nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
@@ -67,7 +66,7 @@ contains
 
     logical,        intent(in) :: ca_global_emis, do_sppt_emis
     real, optional, intent(inout) :: emis_multiplier(:)
-    real, intent(in)    :: ca1(im), emis_amp_seas
+    real, intent(in)    :: ca1(im), emis_amp_seas, pert_scale_seas
     real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
 
 
@@ -142,7 +141,7 @@ contains
 
     if(do_sppt_emis .or. ca_global_emis) then
       do i=ims,im
-        random_factor(i,jms) = min(10.0,max(0.0,(emis_multiplier(i)-1.0)*emis_amp_seas + 1.0))
+        random_factor(i,jms) = min(10.0,max(0.0,((emis_multiplier(i)-1.0)*emis_amp_seas + 1.0)*pert_scale_seas))
       enddo
     endif
 

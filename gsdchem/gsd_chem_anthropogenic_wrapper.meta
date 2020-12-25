@@ -220,6 +220,15 @@
   type = integer
   intent = in
   optional = F
+[pert_scale_anthro]
+  standard_name = anthropogenic_scaling_factor
+  long_name = Scaling factor for emissions of anthropogenic emissions
+  units = none
+  dimensions = ()
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
 [emis_amp_anthro]
   standard_name = anthropogenic_emissions_perturbation_amplitude
   long_name = multiplier of emissions random perturbation of anthropogenic emissions
