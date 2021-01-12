@@ -19,19 +19,7 @@ contains
 
 !> \brief Brief description of the subroutine
 !!
-      subroutine gsd_chem_seas_wrapper_init(ca_global_emis,do_sppt_emis,im,emis_multiplier,errmsg,errflg)
-        implicit none
-        logical, intent(in) :: ca_global_emis, do_sppt_emis
-        real, intent(out) :: emis_multiplier(:)
-        character(len=*), intent(out) :: errmsg
-        integer, intent(out) :: errflg, im
-
-        errmsg=''
-        errflg=0
-
-        if(ca_global_emis .or. do_sppt_emis) then
-          emis_multiplier=1.0
-        endif
+      subroutine gsd_chem_seas_wrapper_init
       end subroutine gsd_chem_seas_wrapper_init
 
 !> \brief Brief description of the subroutine
@@ -55,8 +43,8 @@ contains
                    land, u10m, v10m, ustar, rlat, rlon, tskin,                   &
                    pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,                  &
                    nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,pert_scale_seas, &
-                   gq0,qgrs,ssem,seas_opt_in, emis_amp_seas, emis_multiplier,    &
-                   ca1, ca_global_emis, do_sppt_emis, sppt_wts, errmsg, errflg)
+                   gq0,qgrs,ssem,seas_opt_in, emis_amp_seas,                     &
+                   do_sppt_emis, sppt_wts, errmsg, errflg)
 
     implicit none
 
@@ -64,9 +52,8 @@ contains
     integer,        intent(in) :: nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5
     real(kind_phys),intent(in) :: dt
 
-    logical,        intent(in) :: ca_global_emis, do_sppt_emis
-    real, optional, intent(inout) :: emis_multiplier(:)
-    real, intent(in)    :: ca1(im), emis_amp_seas, pert_scale_seas
+    logical,        intent(in) :: do_sppt_emis
+    real(kind=kind_phys), intent(in)    :: emis_amp_seas, pert_scale_seas
     real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
 
 
@@ -99,7 +86,7 @@ contains
 
     integer :: ide, ime, ite, kde
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
-    real(kind_phys) :: ca1_scaled, random_factor(ims:im,jms:jme)
+    real(kind_phys) :: random_factor(ims:im,jms:jme)
 
 !>-- local variables
     integer :: i, j, jp, k, kp, n
@@ -121,28 +108,10 @@ contains
    !ppm2ugkg(p_so2 ) = 1.e+03_kind_phys * mw_so2_aer / mwdry
     ppm2ugkg(p_sulf) = 1.e+03_kind_phys * mw_so4_aer / mwdry
 
-    random_factor = 1
-
-    if (do_sppt_emis) then
-      do i = ims, im
-        emis_multiplier(i) = sppt_wts(i,kme/2)
-      enddo
-    elseif (ca_global_emis) then
-      do i = ims, im
-        ! ca1(i) is always precisely 0 or 2
-        if(ca1(i)<1.0) then
-          ca1_scaled=0.9
-        else
-          ca1_scaled=1.0/0.9
-        endif
-        emis_multiplier(i) = max(0.8,min(1.2,emis_multiplier(i)*0.95 + ca1_scaled*0.05))
-      enddo
-    endif
-
-    if(do_sppt_emis .or. ca_global_emis) then
-      do i=ims,im
-        random_factor(i,jms) = min(10.0,max(0.0,((emis_multiplier(i)-1.0)*emis_amp_seas + 1.0)*pert_scale_seas))
-      enddo
+    if(do_sppt_emis) then
+      random_factor(:,jms) = pert_scale_seas*max(min(1+(sppt_wts(:,kme/2)-1)*emis_amp_seas,2.0),0.0)
+    else
+      random_factor = 1.0
     endif
 
 !>- get ready for chemistry run

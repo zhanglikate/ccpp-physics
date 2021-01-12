@@ -46,8 +46,7 @@ contains
                    ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,ebu,abem,pert_scale_plume,                           &
                    biomass_burn_opt_in,plumerise_flag_in,plumerisefire_frq_in,   &
-                   emis_amp_plume, emis_multiplier, do_sppt_emis,                &
-                   ca_global_emis, errmsg,errflg)
+                   emis_amp_plume, do_sppt_emis, sppt_wts, errmsg,errflg)
 
     implicit none
 
@@ -60,8 +59,8 @@ contains
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
-    logical,        intent(in) :: ca_global_emis, do_sppt_emis
-    real, optional, intent(in) :: emis_multiplier(:)
+    logical,        intent(in) :: do_sppt_emis
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
     integer, dimension(im), intent(in) :: vegtype    
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
     real(kind_phys), dimension(im,   13), intent(in) :: fire_MODIS
@@ -175,10 +174,8 @@ contains
     if (biomass_burn_opt == BURN_OPT_ENABLE) then
       jp = jte
 
-      if(plumerise_flag == FIRE_OPT_GBBEPx .and. (do_sppt_emis .or. ca_global_emis)) then
-        do i = ims, im
-          random_factor(i) = min(10.0,max(0.0,((emis_multiplier(i)-1.0)*emis_amp_plume + 1.0)*pert_scale_plume))
-        enddo
+      if(plumerise_flag == FIRE_OPT_GBBEPx .and. do_sppt_emis) then
+        random_factor(:) = pert_scale_plume*max(min(1+(sppt_wts(:,kme/2)-1)*emis_amp_plume,2.0),0.0)
       endif
 
       factor3 = 0._kind_phys

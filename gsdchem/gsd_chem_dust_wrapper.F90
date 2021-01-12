@@ -51,8 +51,7 @@ contains
                    gq0,qgrs,duem,                                               &
                    chem_opt_in,dust_opt_in,dust_calcdrag_in,                    &
                    dust_alpha_in,dust_gamma_in,pert_scale_dust,                 &
-                   emis_amp_dust, emis_multiplier, do_sppt_emis, ca_global_emis,&
-                   errmsg,errflg)
+                   emis_amp_dust, do_sppt_emis, sppt_wts, errmsg,errflg)
 
     implicit none
 
@@ -62,8 +61,8 @@ contains
     integer,        intent(in) :: ntdust1,ntdust2,ntdust3,ntdust4,ntdust5,ndust
     real(kind_phys),intent(in) :: dt, emis_amp_dust, pert_scale_dust
 
-    logical,        intent(in) :: ca_global_emis, do_sppt_emis
-    real, optional, intent(in) :: emis_multiplier(:)
+    logical,        intent(in) :: do_sppt_emis
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -135,10 +134,8 @@ contains
     ite=im
     kde=kte
 
-    if(do_sppt_emis .or. ca_global_emis) then
-      do i = ims, im
-        random_factor(i,jms) = min(10.0,max(0.0,((emis_multiplier(i)-1.0)*emis_amp_dust + 1.0)*pert_scale_dust))
-      enddo
+    if(do_sppt_emis) then
+      random_factor(:,jms) = pert_scale_dust*max(min(1+(sppt_wts(:,kme/2)-1)*emis_amp_dust,2.0),0.0)
     else
       random_factor = 1.0
     endif
