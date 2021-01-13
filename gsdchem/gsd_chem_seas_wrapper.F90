@@ -42,8 +42,8 @@ contains
     subroutine gsd_chem_seas_wrapper_run(im, kte, kme, ktau, dt, garea,          &
                    land, u10m, v10m, ustar, rlat, rlon, tskin,                   &
                    pr3d, ph3d,prl3d, tk3d, us3d, vs3d, spechum,                  &
-                   nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,pert_scale_seas, &
-                   gq0,qgrs,ssem,seas_opt_in, emis_amp_seas,                     &
+                   nseasalt,ntrac,ntss1,ntss2,ntss3,ntss4,ntss5,                 &
+                   gq0,qgrs,ssem,seas_opt_in, pert_scale_seas, emis_amp_seas,    &
                    do_sppt_emis, sppt_wts, errmsg, errflg)
 
     implicit none

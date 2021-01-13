@@ -44,8 +44,8 @@ contains
                    pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,           &
                    w,vegtype,fire_GBBEPx,fire_MODIS,                             &
                    ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
-                   gq0,qgrs,ebu,abem,pert_scale_plume,                           &
-                   biomass_burn_opt_in,plumerise_flag_in,plumerisefire_frq_in,   &
+                   gq0,qgrs,ebu,abem,biomass_burn_opt_in,plumerise_flag_in,      &
+                   plumerisefire_frq_in,pert_scale_plume,                        &
                    emis_amp_plume, do_sppt_emis, sppt_wts, errmsg,errflg)
 
     implicit none
