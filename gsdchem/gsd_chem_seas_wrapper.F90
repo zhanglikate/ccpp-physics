@@ -133,7 +133,7 @@ contains
         u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,ust,p8w,tsk,              &
         xland,xlat,xlong,dxy,g,emis_seas,                               &
         seashelp,num_emis_seas,num_moist,num_chem,seas_opt,             &
-        random_factor,.false.,                                          &
+        random_factor,                                                  &
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
