@@ -41,9 +41,8 @@ contains
     subroutine gsd_chem_anthropogenic_wrapper_run(im, kte, kme, ktau, dt,               &
                    pr3d, ph3d,phl3d, prl3d, tk3d, spechum,emi_in,                       &
                    ntrac,ntso2,ntsulf,ntpp25,ntbc1,ntoc1,ntpp10,                        &
-                   gq0,qgrs,abem,chem_opt_in,kemit_in,                                  &
-                   emis_amp_anthro, emis_multiplier, do_sppt_emis, ca_global_emis,      &
-                   errmsg,errflg)
+                   gq0,qgrs,abem,chem_opt_in,kemit_in,pert_scale_anthro,                &
+                   emis_amp_anthro,do_sppt_emis,sppt_wts,errmsg,errflg)
 
     implicit none
 
@@ -52,10 +51,9 @@ contains
     integer,        intent(in) :: ntrac
     integer,        intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     integer,        intent(in) :: ntsulf
-    real(kind_phys),intent(in) :: dt, emis_amp_anthro
-
-    logical,        intent(in) :: ca_global_emis, do_sppt_emis
-    real, optional, intent(in) :: emis_multiplier(:)
+    real(kind_phys),intent(in) :: dt, emis_amp_anthro, pert_scale_anthro
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
+    logical,        intent(in) :: do_sppt_emis
 
     integer, parameter :: ids=1,jds=1,jde=1, kds=1
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
@@ -102,10 +100,8 @@ contains
    !ppm2ugkg(p_so2 ) = 1.e+03_kind_phys * mw_so2_aer / mwdry
     ppm2ugkg(p_sulf) = 1.e+03_kind_phys * mw_so4_aer / mwdry
 
-    if(do_sppt_emis .or. ca_global_emis) then
-      do i = ims, im
-        random_factor(i,jms) = min(10.0,max(0.0,(emis_multiplier(i)-1.0)*emis_amp_anthro + 1.0))
-      enddo
+    if(do_sppt_emis) then
+      random_factor(:,jms) = pert_scale_anthro*max(min(1+(sppt_wts(:,kme/2)-1)*emis_amp_anthro,2.0),0.0)
     else
       random_factor = 1.0
     endif
