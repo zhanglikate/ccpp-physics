@@ -30,7 +30,7 @@ CONTAINS
          v_phy,chem,rho_phy,dz8w,u10,v10,ustar,p8w,tsk,            &
          xland,xlat,xlong,area,g,emis_seas, &
          seashelp,num_emis_seas,num_moist,num_chem,seas_opt,  &
-         random_factor,use_random_factor,                          &
+         random_factor,                          &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -55,7 +55,6 @@ CONTAINS
                                                        xlat,                 &
                                                        xlong,area,           &
                                                        random_factor
-     LOGICAL, INTENT(IN) ::                        use_random_factor
      REAL(kind=kind_phys),  DIMENSION( ims:ime , jms:jme ),                        &
             INTENT(OUT   ) :: seashelp
      REAL(kind=kind_phys),  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
