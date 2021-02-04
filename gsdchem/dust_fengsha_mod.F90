@@ -175,7 +175,7 @@ contains
              ! Call dust emission routine.
              call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, & 
                   erodtot, dxy, gravsm, airden, airmas, &
-                  bems, g, drylimit, dust_alpha, dust_gamma, R, uthr(i,j), random_factor(i,j))
+                  bems, g, drylimit, dust_alpha, dust_gamma, R, uthr(i,j), random_factor)
 
              !    if(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
              !     dustin(i,j,1:5)=tc(1:5)*converi
