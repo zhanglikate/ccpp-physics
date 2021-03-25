@@ -467,6 +467,7 @@ module GFS_rrtmg_setup
 !              =8 Thompson microphysics scheme                          !
 !              =6 WSM6 microphysics scheme                              !
 !              =10 MG microphysics scheme                               !
+!              =17 NSSL microphysics scheme                             !
 !   iovr     : control flag for cloud overlap in radiation              !
 !              =0: random overlapping clouds                            !
 !              =1: max/ran overlapping clouds                           !

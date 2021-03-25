@@ -22,7 +22,7 @@
         ntclamt, nleffr, nieffr, nseffr, lndp_type, kdt, imp_physics,          &
         imp_physics_thompson, imp_physics_gfdl, imp_physics_zhao_carr,         &
         imp_physics_zhao_carr_pdf, imp_physics_mg, imp_physics_wsm6,           &
-        imp_physics_fer_hires, julian, yearlen, lndp_var_list, lsswr, lslwr,   &
+        imp_physics_fer_hires, imp_physics_nssl, julian, yearlen, lndp_var_list, lsswr, lslwr,   &
         ltaerosol, lgfdlmprad, uni_cld, effr_in, do_mynnedmf, lmfshal,         &
         lmfdeep2, fhswr, fhlwr, solhr, sup, eps, epsm1, fvirt,                 &
         rog, rocp, con_rd, xlat_d, xlat, xlon, coslat, sinlat, tsfc, slmsk,    &
@@ -91,6 +91,7 @@
                                            imp_physics_zhao_carr_pdf,          &
                                            imp_physics_mg, imp_physics_wsm6,   &
                                            imp_physics_fer_hires,              &
+                                           imp_physics_nssl,                   &
                                            yearlen, icloud
 
       character(len=3), dimension(:), intent(in) :: lndp_var_list
@@ -1006,7 +1007,18 @@
                          dzb, xlat_d, julian, yearlen,                     &
                          clouds,cldsa,mtopa,mbota, de_lgth, alpha)            !  --- outputs
 
-        elseif(imp_physics == imp_physics_thompson) then                              ! Thompson MP
+        elseif(imp_physics == imp_physics_nssl) then ! NSSL MP
+            call progcld6 (plyr,plvl,tlyr,qlyr,qstl,rhly,tracer1,   & !  --- inputs
+                         xlat,xlon,slmsk,dz,delp,                   &
+                         ntrac-1, ntcw-1,ntiw-1,ntrw-1,             &
+                         ntsw-1,ntgl-1,                             &
+                         im, lmk, lmp, uni_cld, lmfshal, lmfdeep2,  &
+                         cldcov(:,1:LMK), effrl_inout(:,:),         &
+                         effri_inout(:,:), effrs_inout(:,:),        &
+                         dzb, xlat_d, julian, yearlen,              &
+                         clouds, cldsa, mtopa, mbota, de_lgth, alpha) !  --- outputs
+
+        elseif(imp_physics == imp_physics_thompson) then ! Thompson MP
 
           if(do_mynnedmf .or. imfdeepcnv == imfdeepcnv_gf ) then ! MYNN PBL or GF conv
               !-- MYNN PBL or convective GF
