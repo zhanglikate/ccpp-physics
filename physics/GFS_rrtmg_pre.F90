@@ -18,7 +18,7 @@
       ! in the CCPP version - they are defined in the interstitial_create routine
       subroutine GFS_rrtmg_pre_run (im, levs, lm, lmk, lmp, n_var_lndp,        &
         imfdeepcnv, imfdeepcnv_gf, me, ncnd, ntrac, num_p3d, npdf3d, ncnvcld3d,&
-        ntqv, ntcw,ntiw, ntlnc, ntinc, ncld, ntrw, ntsw, ntgl, ntwa, ntoz,     &
+        ntqv, ntcw,ntiw, ntlnc, ntinc, ncld, ntrw, ntsw, ntgl, nthl, ntwa, ntoz,     &
         ntclamt, nleffr, nieffr, nseffr, lndp_type, kdt, imp_physics,          &
         imp_physics_nssl2m, imp_physics_nssl2mccn,                             &
         imp_physics_thompson, imp_physics_gfdl, imp_physics_zhao_carr,         &
@@ -1030,6 +1030,41 @@
                          effri_inout(:,:), effrs_inout(:,:),               &
                          dzb, xlat_d, julian, yearlen,                     &
                          clouds,cldsa,mtopa,mbota, de_lgth, alpha)            !  --- outputs
+        elseif( imp_physics == imp_physics_nssl2m          &
+             .or. imp_physics == imp_physics_nssl2mccn     &
+                        ) then                              ! Thompson MP
+
+          if(do_mynnedmf .or. imfdeepcnv == imfdeepcnv_gf ) then ! MYNN PBL or GF conv
+              !-- MYNN PBL or convective GF
+              !-- use cloud fractions with SGS clouds
+              do k=1,lmk
+                do i=1,im
+                  clouds(i,k,1)  = clouds1(i,k)
+                enddo
+              enddo
+
+                ! --- use clduni as with the GFDL microphysics.
+                ! --- make sure that effr_in=.true. in the input.nml!
+                call progclduni (plyr, plvl, tlyr, tvly, ccnd, ncndl,   & !  ---  inputs
+                         xlat, xlon, slmsk, dz, delp, IM, LMK, LMP,     &
+                         clouds(:,1:LMK,1),                             &
+                         effrl, effri, effrr, effrs, effr_in ,          &
+                         dzb, xlat_d, julian, yearlen,                  &
+                         clouds, cldsa, mtopa, mbota, de_lgth, alpha)     !  ---  outputs
+
+          else
+            ! MYNN PBL or GF convective are not used
+            call progcld6 (plyr,plvl,tlyr,qlyr,qstl,rhly,tracer1,   & !  --- inputs
+                         xlat,xlon,slmsk,dz,delp,                   &
+                         ntrac-1, ntcw-1,ntiw-1,ntrw-1,             &
+                         ntsw-1,ntgl-1,                             &
+                         im, lmk, lmp, uni_cld, lmfshal, lmfdeep2,  &
+                         cldcov(:,1:LMK), effrl_inout(:,:),         &
+                         effri_inout(:,:), effrs_inout(:,:),        &
+                         dzb, xlat_d, julian, yearlen,              &
+                         clouds, cldsa, mtopa ,mbota, de_lgth, alpha) !  --- outputs
+          endif ! MYNN PBL or GF
+
 
 ! Dong
 !        elseif(imp_physics == imp_physics_nssl) then ! NSSL MP
@@ -1046,8 +1081,8 @@
 !        elseif(imp_physics == imp_physics_thompson) then ! Thompson MP
 
         elseif(imp_physics == imp_physics_thompson      &
-             .or.  imp_physics == imp_physics_nssl2m          &
-             .or. imp_physics == imp_physics_nssl2mccn     &
+!             .or.  imp_physics == imp_physics_nssl2m          &
+!             .or. imp_physics == imp_physics_nssl2mccn     &
                         ) then                              ! Thompson MP
 
           if(do_mynnedmf .or. imfdeepcnv == imfdeepcnv_gf ) then ! MYNN PBL or GF conv
