@@ -114,7 +114,7 @@
       real(kind=kind_phys), dimension(im),      intent(in   ) :: sr
       real(kind=kind_phys), dimension(im),      intent(inout) :: rain, domr_diag, domzr_diag, domip_diag, doms_diag, tprcp,  &
                                                                  srflag, cnvprcp, totprcp, totice, totsnw, totgrp, cnvprcpb, &
-                                                                 ttotprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl,  &
+                                                                 totprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl,  &
                                                                  snow_cpl, pwat
 
       real(kind=kind_phys), dimension(:,:),     intent(inout) :: dt3dt ! only if ldiag3d
