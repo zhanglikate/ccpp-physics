@@ -23,7 +23,7 @@
         imp_physics_nssl2m, imp_physics_nssl2mccn,                             &
         imp_physics_thompson, imp_physics_gfdl, imp_physics_zhao_carr,         &
         imp_physics_zhao_carr_pdf, imp_physics_mg, imp_physics_wsm6,           &
-        imp_physics_fer_hires, imp_physics_nssl, julian, yearlen, lndp_var_list, lsswr, lslwr,   &
+        imp_physics_fer_hires, julian, yearlen, lndp_var_list, lsswr, lslwr,   &
         ltaerosol, lgfdlmprad, uni_cld, effr_in, do_mynnedmf, lmfshal,         &
         lmfdeep2, fhswr, fhlwr, solhr, sup, eps, epsm1, fvirt,                 &
         rog, rocp, con_rd, xlat_d, xlat, xlon, coslat, sinlat, tsfc, slmsk,    &
@@ -93,7 +93,6 @@
                                            imp_physics_mg, imp_physics_wsm6,   &
                                     imp_physics_nssl2m, imp_physics_nssl2mccn, &
                                            imp_physics_fer_hires,              &
-                                           imp_physics_nssl,                   &
                                            yearlen, icloud
 
       character(len=3), dimension(:), intent(in) :: lndp_var_list

@@ -227,7 +227,7 @@
 !
 !       HCHUANG: use new precipitation type to decide snow flag for LSM snow accumulation
 
-        if (imp_physics /= imp_physics_gfdl .and. imp_physics /= imp_physics_thompson .and. imp_physics /= imp_physics_nssl) then
+        if (imp_physics /= imp_physics_gfdl .and. imp_physics /= imp_physics_thompson) then
           do i=1,im
             tprcp(i)  = max(zero, rain(i) )
             if(doms(i) > zero .or. domip(i) > zero) then

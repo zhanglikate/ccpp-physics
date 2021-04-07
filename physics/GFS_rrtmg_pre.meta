@@ -345,14 +345,6 @@
   type = integer
   intent = in
   optional = F
-[imp_physics_nssl]
-  standard_name = flag_for_nssl_microphysics_scheme
-  long_name = choice of NSSL microphysics scheme
-  units = flag
-  dimensions = ()
-  type = integer
-  intent = in
-  optional = F
 [julian]
   standard_name = julian_day
   long_name = julian day
