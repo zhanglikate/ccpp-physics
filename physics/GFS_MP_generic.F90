@@ -84,9 +84,6 @@
 !!
 !> \section gfs_mp_gen GFS MP Generic Post General Algorithm
 !> @{
-! Dong
-!      subroutine GFS_MP_generic_post_run(im, levs, kdt, nrcm, ncld, nncl, ntcw, ntrac, imp_physics, imp_physics_gfdl, imp_physics_nssl,    &
-!        imp_physics_thompson, imp_physics_mg, imp_physics_fer_hires, cal_pre, lssav, ldiag3d, qdiag3d, cplflx, cplchm, con_g, dtf, frain, rainc, rain1,   &
 
       subroutine GFS_MP_generic_post_run(im, levs, kdt, nrcm, ncld, nncl, ntcw, ntrac, imp_physics, imp_physics_gfdl,     &
         imp_physics_thompson, imp_physics_mg, imp_physics_fer_hires, imp_physics_nssl2m, imp_physics_nssl2mccn,           &
@@ -118,7 +115,7 @@
       real(kind=kind_phys), dimension(im),      intent(in   ) :: sr
       real(kind=kind_phys), dimension(im),      intent(inout) :: rain, domr_diag, domzr_diag, domip_diag, doms_diag, tprcp,  &
                                                                  srflag, cnvprcp, totprcp, totice, totsnw, totgrp, cnvprcpb, &
-                                                                 ttotprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl,  &
+                                                                 totprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl,  &
                                                                  snow_cpl, pwat
 
       real(kind=kind_phys), dimension(:,:),     intent(inout) :: dt3dt ! only if ldiag3d
@@ -227,7 +224,7 @@
 !
 !       HCHUANG: use new precipitation type to decide snow flag for LSM snow accumulation
 
-        if (imp_physics /= imp_physics_gfdl .and. imp_physics /= imp_physics_thompson .and. imp_physics /= imp_physics_nssl) then
+        if (imp_physics /= imp_physics_gfdl .and. imp_physics /= imp_physics_thompson) then
           do i=1,im
             tprcp(i)  = max(zero, rain(i) )
             if(doms(i) > zero .or. domip(i) > zero) then

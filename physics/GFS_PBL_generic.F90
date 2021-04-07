@@ -104,7 +104,7 @@
       integer, intent(in) :: ntwa, ntia, ntgl, ntoz, ntke, ntkev, nqrimef,ntchs, ntchm
       integer, intent(in) :: ntccn, nthl, nthnc, ntgv, nthv
       logical, intent(in) :: trans_aero, ldiag3d, qdiag3d, lssav
-      integer, intent(in) :: imp_physics, imp_physics_gfdl, imp_physics_nssl, imp_physics_thompson, imp_physics_wsm6
+      integer, intent(in) :: imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_wsm6
       integer, intent(in) :: imp_physics_zhao_carr, imp_physics_mg, imp_physics_fer_hires
       integer, intent(in) :: imp_physics_nssl2m, imp_physics_nssl2mccn
       logical, intent(in) :: cplchm, ltaerosol, nssl_hail_on, hybedmf, do_shoc, satmedmf
