@@ -247,11 +247,11 @@
                                         imp_physics_mg, ntgl, imp_physics_gfdl, &
                                         imp_physics_zhao_carr, kk,              &
                                         errmsg, errflg)
-          if (cplchm) then
+          !if (cplchm) then
            if (errflg==1) return
-          else
-           if (.not.errflg==1) return
-          endif
+          !else
+          ! if (.not.errflg==1) return
+          !endif
           !
           k1 = kk
           do n=ntchs,ntchm+ntchs-1
@@ -408,11 +408,11 @@
                                         imp_physics_mg, ntgl, imp_physics_gfdl, &
                                         imp_physics_zhao_carr, kk,              &
                                         errmsg, errflg)
-          if (cplchm) then
+          !if (cplchm) then
            if (errflg==1) return
-          else
-           if (.not.errflg==1) return
-          endif
+          !else
+          ! if (.not.errflg==1) return
+          !endif
           !
           k1 = kk
           do n=ntchs,ntchm+ntchs-1
