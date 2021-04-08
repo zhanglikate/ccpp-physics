@@ -212,6 +212,10 @@ c-----------------------------------------------------------------------
              cinacrmn=-80.
       endif
 
+! Initialize local variables
+      xmb    = 0.0
+      xmbmax = 0.0
+
 c-----------------------------------------------------------------------
       if (.not.hwrf_samfshal) then
 !>  ## Determine whether to perform aerosol transport

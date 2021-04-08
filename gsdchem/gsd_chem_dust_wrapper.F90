@@ -128,6 +128,9 @@ contains
     dust_opt          = dust_opt_in
     dust_calcdrag     = dust_calcdrag_in
 
+    ! -- initialize dust emissions
+    emis_dust = 0._kind_phys
+
     ! -- set domain
     ide=im 
     ime=im
@@ -178,7 +181,7 @@ contains
         dust_gamma = afwa_gamma
         call gocart_dust_afwa_driver(ktau,dt,rri,t_phy,moist,u_phy,     &
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp, &
-          vegfrac,xland,xlat,xlong,gsw,dxy,g,emis_dust,srce_dust,    &
+          vegfrac,xland,xlat,xlong,gsw,dxy,g,emis_dust,srce_dust,       &
           dusthelp,ust,znt,clayf,sandf,                                 &
           num_emis_dust,num_moist,num_chem,nsoil,                       &
           ids,ide, jds,jde, kds,kde,                                    &
@@ -189,7 +192,7 @@ contains
        dust_alpha    = dust_alpha_in  !fengsha_alpha
        dust_gamma    = dust_gamma_in  !fengsha_gamma
        call gocart_dust_fengsha_driver(dt,chem,rho_phy,smois,p8w,ssm,   &
-            isltyp,vegfrac,snowh,xland,dxy,g,emis_dust,ust,znt,      &
+            isltyp,vegfrac,snowh,xland,dxy,g,emis_dust,ust,znt,         &
             clayf,sandf,rdrag,uthr,                                     &
             num_emis_dust,num_moist,num_chem,nsoil,                     &
             random_factor,                                              &
@@ -202,12 +205,16 @@ contains
         dust_gamma = gocart_gamma
         call gocart_dust_driver(chem_opt,ktau,dt,rri,t_phy,moist,u_phy, &
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp, &
-          vegfrac,xland,xlat,xlong,gsw,dxy,g,emis_dust,srce_dust,    &
+          vegfrac,xland,xlat,xlong,gsw,dxy,g,emis_dust,srce_dust,       &
           dusthelp,num_emis_dust,num_moist,num_chem,nsoil,              &
           current_month,                                                &
           ids,ide, jds,jde, kds,kde,                                    &
           ims,ime, jms,jme, kms,kme,                                    &
           its,ite, jts,jte, kts,kte)
+      case default
+        errmsg = 'Logic error in gsd_chem_dust_wrapper_run: invalid dust_opt'
+        errflg = 1
+        return
        !store_arrays = .true.
     end select
 
