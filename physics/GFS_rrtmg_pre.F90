@@ -33,7 +33,7 @@
         gasvmr_o2, gasvmr_co, gasvmr_cfc11, gasvmr_cfc12, gasvmr_cfc22,        &
         gasvmr_ccl4,  gasvmr_cfc113, aerodp, clouds6, clouds7, clouds8,        &
         clouds9, cldsa, cldfra, faersw1, faersw2, faersw3, faerlw1, faerlw2,   &
-        faerlw3, alpha, errmsg, errflg)
+        faerlw3, alpha, cplchm_rad_opt, faersw_cpl, errmsg, errflg)
 
       use machine,                   only: kind_phys
 
@@ -168,6 +168,9 @@
                                                                        faerlw2,&
                                                                        faerlw3
       real(kind=kind_phys), dimension(im,lm+LTP),       intent(out) :: alpha
+
+      logical, intent(in) :: cplchm_rad_opt
+      real(kind=kind_phys), dimension(im,lm+LTP,14,NF_AESW), intent(in) :: faersw_cpl
 
       character(len=*), intent(out) :: errmsg
       integer,          intent(out) :: errflg
