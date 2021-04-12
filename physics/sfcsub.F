@@ -403,7 +403,6 @@
 !
 !  coefficients of blending forecast and interpolated clim
 !  (or analyzed) fields over sea or land(l) (not for clouds)
-!tgs -- important
 !  1.0 = use of forecast
 !  0.0 = replace with interpolated analysis
 !
@@ -415,8 +414,8 @@
 !   surface temperature        forecast             forecast (over sea ice)
 !   albedo                     forecast/analysis    analysis
 !   sea-ice                    analysis             analysis
-!   snow                       forecast/analysis             forecast (over sea ice)
-!   roughness                  forecast/analysis             forecast
+!   snow                       forecast/analysis    forecast (over sea ice)
+!   roughness                  forecast/analysis    forecast
 !   plant resistance           analysis             analysis
 !   soil wetness (layer)       weighted average     analysis
 !   soil temperature           forecast             analysis
@@ -802,6 +801,17 @@
         abssmx = 1.0
         abssmn = .01
         abslmn = .01
+      elseif (ialb ==2) then
+        kpdabs = kpdabs_1
+        kpdalb = kpdalb_1
+        alblmx = .99
+        albsmx = .99
+        alblmn = .01
+        albsmn = .01
+        abslmx = 1.0
+        abssmx = 1.0
+        abssmn = .01
+        abslmn = .01
       else
         kpdabs = kpdabs_0
         kpdalb = kpdalb_0
@@ -877,6 +887,7 @@
         enddo
 !
         calbl = 0.                       !...  albedo over land
+        if (ialb == 2) falbl=99999.
         if (falbl >= 99999.) calbl = 1.
         if (falbl > 0. .and. falbl < 99999)  calbl = exp(-deltf/falbl)
 !
@@ -2173,10 +2184,12 @@
         call monitr('snoanl',snoanl,slianl,snoanl,len)
         do k=1,lsoil
           call monitr(message('smcanl',k),smcanl(1,k),slianl,snoanl,len)
-          call monitr('stcanl',stcanl(1,k),slianl,snoanl,len)
+          call monitr(message('stcanl',k),stcanl(1,k),slianl,snoanl,len)
         enddo
-        call monitr('tg3anl',tg3anl,slianl,snoanl,len)
-        call monitr('zoranl',zoranl,slianl,snoanl,len)
+        if (lsoil > 2) then
+          call monitr('tg3anl',tg3anl,slianl,snoanl,len)
+          call monitr('zoranl',zoranl,slianl,snoanl,len)
+        endif
 !       if (gaus) then
           call monitr('cvaanl',cvanl ,slianl,snoanl,len)
           call monitr('cvbanl',cvbanl,slianl,snoanl,len)
@@ -2252,7 +2265,7 @@
         call monitr('snodif',snofcs,slianl,snoanl,len)
         do k=1,lsoil
           call monitr(message('smcanl',k),smcfcs(1,k),slianl,snoanl,len)
-          call monitr('stcanl(k)',stcfcs(1,k),slianl,snoanl,len)
+          call monitr(message('stcanl',k),stcfcs(1,k),slianl,snoanl,len)
         enddo
         call monitr('tg3dif',tg3fcs,slianl,snoanl,len)
         call monitr('zordif',zorfcs,slianl,snoanl,len)
@@ -7211,7 +7224,7 @@ cjfe
 cjfe
 
         kpd7=-1
-        if (ialb == 1) then
+        if (ialb == 1 .or. ialb == 2) then
 !cbosu    still need facsf and facwf.  read them from the production file
           if ( index(fnalbc2, "tileX.nc") == 0) then ! grib file
             call fixrdc(lugb,fnalbc2,kpdalf(1),kpd7,kpd9,slmask
@@ -7400,7 +7413,7 @@ cjfe
           if (nn .eq. 2) mon = mon2
 !cbosu
 !cbosu  new snowfree albedo database is monthly.  
-          if (ialb == 1) then
+          if (ialb == 1 .or. ialb == 2) then
             if ( index(fnalbc, "tileX.nc") == 0) then ! grib file
               kpd7=-1
               do k = 1, 4
@@ -7684,7 +7697,7 @@ cjfe
           mon = mon2
           nn  = k2
 !cbosu
-          if (ialb == 1) then
+          if (ialb == 1 .or. ialb == 2) then
             if (me == 0) print*,'bosu 2nd time in clima for month ',
      &                   mon, k1,k2
             if ( index(fnalbc, "tileX.nc") == 0) then ! grib file
@@ -7994,7 +8007,7 @@ cjfe
       if (me == 0) print*,'monthly albedo weights are ', 
      &             wei1m,' for k', k1, wei2m, ' for k', k2
 
-      if (ialb == 1) then
+      if (ialb == 1 .or. ialb == 2) then
         do k=1,4
           do i=1,len
             albclm(i,k) = wei1m * alb(i,k,k1) + wei2m * alb(i,k,k2)

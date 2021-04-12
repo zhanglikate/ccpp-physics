@@ -9,21 +9,11 @@
 
       contains
 
-!> \brief Brief description of the subroutine
-!!
-!! \section arg_table_samfshalcnv_init Argument Table
-!!
       subroutine samfshalcnv_init()
       end subroutine samfshalcnv_init
 
-
-!> \brief Brief description of the subroutine
-!!
-!! \section arg_table_samfshalcnv_finalize Argument Table
-!!
       subroutine samfshalcnv_finalize()
       end subroutine samfshalcnv_finalize
-
 
 !> \defgroup SAMF_shal GFS Scale-Aware Mass-Flux Shallow Convection Scheme Module
 !! @{
@@ -221,6 +211,10 @@ c-----------------------------------------------------------------------
       if (.not.hwrf_samfshal) then
              cinacrmn=-80.
       endif
+
+! Initialize local variables
+      xmb    = 0.0
+      xmbmax = 0.0
 
 c-----------------------------------------------------------------------
       if (.not.hwrf_samfshal) then

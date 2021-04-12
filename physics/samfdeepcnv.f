@@ -10,18 +10,9 @@
 
       contains
 
-!> \brief Brief description of the subroutine
-!!
-!! \section arg_table_samfdeepcnv_init Argument Table
-!!
       subroutine samfdeepcnv_init()
       end subroutine samfdeepcnv_init
 
-
-!> \brief Brief description of the subroutine
-!!
-!! \section arg_table_samfdeepcnv_finalize Argument Table
-!!
       subroutine samfdeepcnv_finalize()
       end subroutine samfdeepcnv_finalize
 
@@ -280,6 +271,9 @@ c    &            .743,.813,.886,.947,1.138,1.377,1.896/
       errmsg = ''
       errflg = 0
 
+! Initialize local variables
+      xmb    = 0.0
+      xmbmax = 0.0
 
       elocp = hvap/cp
       el2orc = hvap*hvap/(rv*cp)
@@ -428,10 +422,10 @@ c
         cxlamu  = 1.0e-3
       else
         aafac   = .05
-        crtlame = 1.0e-4
         cxlame  = 1.0e-4
       endif
       crtlamd = 1.0e-4
+      crtlame = 1.0e-4
       cxlamd  = 1.0e-4
       xlamde  = 1.0e-4
       xlamdd  = 1.0e-4
