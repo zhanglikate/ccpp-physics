@@ -58,6 +58,14 @@
   kind = kind_phys
   intent = in
   optional = F
+[vegtype_cpl]
+  standard_name = vegetation_type_classification_for_coupling
+  long_name = vegetation type at each grid cell copied from vegtype
+  units = index
+  dimensions = (horizontal_dimension)
+  type = integer
+  intent = out
+  optional = F
 [pr3d]
   standard_name = air_pressure_at_interface
   long_name = air pressure at model layer interfaces
@@ -165,6 +173,16 @@
   kind = kind_phys
   intent = in
   optional = F
+[ca_sgs_gbbepx_frp]
+  standard_name = GBBEPx_fire_radiative_power_for_stochastic_physics
+  long_name = GBBEPx fire radiative power for stochastic physics
+  units = MW
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  active = (flag_for_cellular_automata)
+  intent = out
+  optional = F
 [ntrac]
   standard_name = number_of_tracers
   long_name = number of tracers
@@ -211,6 +229,30 @@
   units = index
   dimensions = ()
   type = integer
+  intent = in
+  optional = F
+[do_ca]
+  standard_name = flag_for_cellular_automata
+  long_name = cellular automata main switch
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[ca_sgs_emis]
+  standard_name = flag_for_sgs_cellular_automata_in_chemical_tracer_emissions
+  long_name = switch for sgs ca in chemical tracer emissions
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+  optional = F
+[ca_sgs]
+  standard_name = flag_for_sgs_cellular_automata
+  long_name = switch for sgs ca
+  units = flag
+  dimensions = ()
+  type = logical
   intent = in
   optional = F
 [gq0]
