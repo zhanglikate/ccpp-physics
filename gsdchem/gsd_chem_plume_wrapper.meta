@@ -300,6 +300,15 @@
   kind = kind_phys
   intent = in
   optional = F
+[ca_emis_plume]
+  standard_name = fraction_of_cellular_automata_for_plume_rise_emissions
+  long_name = fraction of cellular automata for plume rise emissions
+  units = frac
+  dimensions = (horizontal_dimension)
+  type = real
+  kind = kind_phys
+  intent = in
+  optional = F
 [biomass_burn_opt_in]
   standard_name = gsd_chem_biomass_burn_opt
   long_name = gsd chem biomass burning option

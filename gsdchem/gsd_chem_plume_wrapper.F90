@@ -40,12 +40,13 @@ contains
 !!
 !>\section gsd_chem_plume_wrapper GSD Chemistry Scheme General Algorithm
 !> @{
-    subroutine gsd_chem_plume_wrapper_run(im, kte, kme, ktau, dt, vegtype_cpl,   &
+    subroutine gsd_chem_plume_wrapper_run(im, kte, kme, ktau, dt,                &
                    pr3d, ph3d,phl3d, prl3d, tk3d, us3d, vs3d, spechum,           &
-                   w,vegtype,fire_GBBEPx,fire_MODIS,ca_sgs_gbbepx_frp,           &
-                   ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,do_ca,ca_sgs_emis,      &
-                   ca_sgs,gq0,qgrs,ebu,abem,pert_scale_plume,                    &
-                   plumerisefire_frq_in,pert_scale_plume,                        &
+                   w,vegtype,fire_GBBEPx,fire_MODIS,                             &
+                   ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
+                   gq0,qgrs,ebu,abem,biomass_burn_opt_in,plumerise_flag_in,      &
+                   plumerisefire_frq_in,pert_scale_plume,ca_emis_plume,          &
+                   do_ca,ca_sgs,ca_sgs_emis,vegtype_cpl,ca_sgs_gbbepx_frp,       &
                    emis_amp_plume, do_sppt_emis, sppt_wts, errmsg,errflg)
 
     implicit none
@@ -60,7 +61,7 @@ contains
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
     logical,        intent(in) :: do_sppt_emis, do_ca, ca_sgs_emis, ca_sgs
-    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
+    real(kind_phys), optional, intent(in) :: sppt_wts(:,:), ca_emis_plume(:)
     integer, dimension(im), intent(in) :: vegtype    
     integer, dimension(im), intent(out) :: vegtype_cpl
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
@@ -154,7 +155,7 @@ contains
         plumerise_flag,num_plume_data,ppm2ugkg,                         &
         mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr,        &
         firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr,        &
-        moist,chem,plume_frp,ebu_in,ivgtyp,                             &
+        moist,chem,plume_frp,ebu_in,ivgtyp,ca_emis_plume,doing_sgs_emis,&
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
@@ -289,7 +290,7 @@ contains
         mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr,       &
         firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr,       &
         moist,chem,plumedist,ebu_in,                                   &
-        ivgtyp,              &
+        ivgtyp,ca_emis_plume,doing_sgs_emis,              &
         ids,ide, jds,jde, kds,kde,                                     &
         ims,ime, jms,jme, kms,kme,                                     &
         its,ite, jts,jte, kts,kte)
@@ -302,6 +303,8 @@ contains
     integer, dimension(ims:ime), intent(in) :: vegtype
     integer, intent(in) :: ntrac
     integer, intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
+    logical, intent(in) :: doing_sgs_emis
+    real(kind=kind_phys), intent(in) :: ca_emis_plume(:)
     real(kind=kind_phys), dimension(ims:ime,     5),   intent(in) :: fire_GBBEPx
     real(kind=kind_phys), dimension(ims:ime,    13),   intent(in) :: fire_MODIS
     real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) ::     &
@@ -474,8 +477,18 @@ contains
           emiss_abu(i,j,p_e_oc)   =fire_GBBEPx(i,2)
           emiss_abu(i,j,p_e_pm_25)=fire_GBBEPx(i,3)
           emiss_abu(i,j,p_e_so2)  =fire_GBBEPx(i,4)
-          plume(i,j,1)            =fire_GBBEPx(i,5)
-          ca_sgs_gbbepx_frp_with_j(i,j) = fire_GBBEPx(i,5)
+         enddo
+        enddo
+        do j=jts,jte
+         do i=its,ite
+          if(doing_sgs_emis) then
+            ca_sgs_gbbepx_frp_with_j(i,j) = fire_GBBEPx(i,5)
+          endif
+          if(ktau>3 .and. doing_sgs_emis) then
+            plume(i,j,1)            =ca_emis_plume(i)*0.5 !+ fire_GBBEPx(i,5)*0.5
+          else
+            plume(i,j,1)            =fire_GBBEPx(i,5)
+          endif
          enddo
         enddo
 !        print*,'hli GBBEPx plume',maxval(plume(:,:,1))
