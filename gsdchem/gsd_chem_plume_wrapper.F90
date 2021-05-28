@@ -485,7 +485,7 @@ contains
             ca_sgs_gbbepx_frp_with_j(i,j) = fire_GBBEPx(i,5)
           endif
           if(ktau>3 .and. doing_sgs_emis) then
-            plume(i,j,1)            =ca_emis_plume(i)*0.5 !+ fire_GBBEPx(i,5)*0.5
+            plume(i,j,1)            =ca_emis_plume(i)! *0.5 + fire_GBBEPx(i,5)*0.5
           else
             plume(i,j,1)            =fire_GBBEPx(i,5)
           endif
