@@ -66,7 +66,7 @@ contains
     integer, dimension(im), intent(out) :: vegtype_cpl
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
     real(kind_phys), dimension(im,   13), intent(in) :: fire_MODIS
-    real(kind_phys), intent(out) :: ca_sgs_gbbepx_frp(:)
+    real(kind_phys), optional, intent(out) :: ca_sgs_gbbepx_frp(:)
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum, w
@@ -304,7 +304,7 @@ contains
     integer, intent(in) :: ntrac
     integer, intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     logical, intent(in) :: doing_sgs_emis
-    real(kind=kind_phys), intent(in) :: ca_emis_plume(:)
+    real(kind=kind_phys), optional, intent(in) :: ca_emis_plume(:)
     real(kind=kind_phys), dimension(ims:ime,     5),   intent(in) :: fire_GBBEPx
     real(kind=kind_phys), dimension(ims:ime,    13),   intent(in) :: fire_MODIS
     real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) ::     &
@@ -322,7 +322,7 @@ contains
                            its,ite, jts,jte, kts,kte
 
     real(kind_phys), dimension(num_chem), intent(in) :: ppm2ugkg
-    real(kind_phys), dimension(ims:ime, jms:jme), intent(out) :: ca_sgs_gbbepx_frp_with_j
+    real(kind_phys), optional, dimension(:, :), intent(out) :: ca_sgs_gbbepx_frp_with_j
     real(kind_phys), dimension(ims:ime, jms:jme, num_ebu_in),intent(out) :: ebu_in
     
     integer,dimension(ims:ime, jms:jme), intent(out) :: ivgtyp
@@ -479,18 +479,20 @@ contains
           emiss_abu(i,j,p_e_so2)  =fire_GBBEPx(i,4)
          enddo
         enddo
-        do j=jts,jte
-         do i=its,ite
-          if(doing_sgs_emis) then
-            ca_sgs_gbbepx_frp_with_j(i,j) = fire_GBBEPx(i,5)
-          endif
-          if(ktau>3 .and. doing_sgs_emis) then
-            plume(i,j,1)            =ca_emis_plume(i)! *0.5 + fire_GBBEPx(i,5)*0.5
-          else
-            plume(i,j,1)            =fire_GBBEPx(i,5)
-          endif
-         enddo
-        enddo
+        if(doing_sgs_emis) then
+          do j=jts,jte
+           do i=its,ite
+             ca_sgs_gbbepx_frp_with_j(i,j) = fire_GBBEPx(i,5)
+             plume(i,j,1)            =ca_emis_plume(i)! *0.5 + fire_GBBEPx(i,5)*0.5
+           enddo
+          enddo
+        else
+          do j=jts,jte
+           do i=its,ite
+             plume(i,j,1)            =fire_GBBEPx(i,5)
+           enddo
+          enddo
+        endif
 !        print*,'hli GBBEPx plume',maxval(plume(:,:,1))
       case default
           ! -- no further option available
