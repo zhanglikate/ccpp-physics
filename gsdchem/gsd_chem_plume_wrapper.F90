@@ -61,12 +61,12 @@ contains
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
     logical,        intent(in) :: do_sppt_emis, do_ca, ca_sgs_emis, ca_sgs
-    real(kind_phys), optional, intent(in) :: sppt_wts(:,:), ca_emis_plume(:)
+    real(kind_phys), intent(in) :: sppt_wts(:,:), ca_emis_plume(:)
     integer, dimension(im), intent(in) :: vegtype    
     integer, dimension(im), intent(out) :: vegtype_cpl
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
     real(kind_phys), dimension(im,   13), intent(in) :: fire_MODIS
-    real(kind_phys), optional, intent(out) :: ca_sgs_gbbepx_frp(:)
+    real(kind_phys), intent(out) :: ca_sgs_gbbepx_frp(:)
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum, w
@@ -304,7 +304,7 @@ contains
     integer, intent(in) :: ntrac
     integer, intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
     logical, intent(in) :: doing_sgs_emis
-    real(kind=kind_phys), optional, intent(in) :: ca_emis_plume(:)
+    real(kind=kind_phys), intent(in) :: ca_emis_plume(:)
     real(kind=kind_phys), dimension(ims:ime,     5),   intent(in) :: fire_GBBEPx
     real(kind=kind_phys), dimension(ims:ime,    13),   intent(in) :: fire_MODIS
     real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) ::     &
@@ -322,7 +322,7 @@ contains
                            its,ite, jts,jte, kts,kte
 
     real(kind_phys), dimension(num_chem), intent(in) :: ppm2ugkg
-    real(kind_phys), optional, dimension(:, :), intent(out) :: ca_sgs_gbbepx_frp_with_j
+    real(kind_phys), dimension(:, :), intent(out) :: ca_sgs_gbbepx_frp_with_j
     real(kind_phys), dimension(ims:ime, jms:jme, num_ebu_in),intent(out) :: ebu_in
     
     integer,dimension(ims:ime, jms:jme), intent(out) :: ivgtyp
