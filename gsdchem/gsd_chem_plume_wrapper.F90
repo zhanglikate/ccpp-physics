@@ -45,7 +45,8 @@ contains
                    w,vegtype,fire_GBBEPx,fire_MODIS,                             &
                    ntrac,ntso2,ntpp25,ntbc1,ntoc1,ntpp10,                        &
                    gq0,qgrs,ebu,abem,biomass_burn_opt_in,plumerise_flag_in,      &
-                   plumerisefire_frq_in,pert_scale_plume,                        &
+                   plumerisefire_frq_in,pert_scale_plume,ca_emis_plume,          &
+                   do_ca,ca_sgs,ca_sgs_emis,vegtype_cpl,ca_sgs_gbbepx_frp,       &
                    emis_amp_plume, do_sppt_emis, sppt_wts, errmsg,errflg)
 
     implicit none
@@ -59,11 +60,13 @@ contains
     integer, parameter :: ims=1,jms=1,jme=1, kms=1
     integer, parameter :: its=1,jts=1,jte=1, kts=1
 
-    logical,        intent(in) :: do_sppt_emis
-    real(kind_phys), optional, intent(in) :: sppt_wts(:,:)
+    logical,        intent(in) :: do_sppt_emis, do_ca, ca_sgs_emis, ca_sgs
+    real(kind_phys), intent(in) :: sppt_wts(:,:), ca_emis_plume(:)
     integer, dimension(im), intent(in) :: vegtype    
+    integer, dimension(im), intent(out) :: vegtype_cpl
     real(kind_phys), dimension(im,    5), intent(in) :: fire_GBBEPx
     real(kind_phys), dimension(im,   13), intent(in) :: fire_MODIS
+    real(kind_phys), intent(out) :: ca_sgs_gbbepx_frp(:)
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d, pr3d
     real(kind_phys), dimension(im,kte), intent(in) :: phl3d, prl3d, tk3d,        &
                 us3d, vs3d, spechum, w
@@ -89,11 +92,12 @@ contains
     real(kind_phys), dimension(ims:im, jms:jme, num_ebu_in) :: ebu_in
     real(kind_phys), dimension(ims:im, jms:jme) ::                              &
          mean_fct_agef, mean_fct_aggr, mean_fct_agsv, mean_fct_agtf,            &
-         firesize_agef, firesize_aggr, firesize_agsv, firesize_agtf
+         firesize_agef, firesize_aggr, firesize_agsv, firesize_agtf,            &
+         ca_sgs_gbbepx_frp_with_j
     real(kind_phys), dimension(ims:im, jms:jme, num_frp_plume ) :: plume_frp
     real(kind_phys) :: dtstep
    !integer,parameter :: plumerise_flag = 2  ! 1=MODIS, 2=GBBEPx
-    logical :: call_plume, scale_fire_emiss
+    logical :: call_plume, scale_fire_emiss, doing_sgs_emis
     logical, save :: firstfire = .true.
     real(kind_phys), dimension(1:num_chem) :: ppm2ugkg
     real(kind_phys), parameter :: ugkg = 1.e-09_kind_phys !lzhang
@@ -113,6 +117,7 @@ contains
     plumerisefire_frq = plumerisefire_frq_in
     random_factor = 1.0
     curr_secs = ktau * dt
+    doing_sgs_emis = do_ca .and. ca_sgs_emis .and. .not. ca_sgs
 
     ! -- set domain
     ide=im 
@@ -146,15 +151,22 @@ contains
         rri,t_phy,u_phy,v_phy,p_phy,rho_phy,dz8w,p8w,                   &
         z_at_w,vvel,                                                    &
         ntso2,ntpp25,ntbc1,ntoc1,ntpp10,ntrac,gq0,                      &
-        num_chem, num_moist,num_ebu_in,                                 &
+        num_chem, num_moist,num_ebu_in,ca_sgs_gbbepx_frp_with_j,        &
         plumerise_flag,num_plume_data,ppm2ugkg,                         &
         mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr,        &
         firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr,        &
-        moist,chem,plume_frp,ebu_in,ivgtyp,                             &
+        moist,chem,plume_frp,ebu_in,ivgtyp,ca_emis_plume,doing_sgs_emis,&
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
 
+    ! Input to cellular automata
+    if(doing_sgs_emis) then
+      do i=ids,ide
+        ca_sgs_gbbepx_frp(i) = ca_sgs_gbbepx_frp_with_j(i,jds)
+        vegtype_cpl(i) = vegtype(i)
+      enddo
+    endif
 
     ! compute wild-fire plumes
     if (call_plume) then
@@ -272,13 +284,13 @@ contains
         ntbc1,ntoc1,                                       &
         ntpp10,                &
         ntrac,gq0,                                                     &
-        num_chem, num_moist,num_ebu_in,                                &
+        num_chem, num_moist,num_ebu_in,ca_sgs_gbbepx_frp_with_j,       &
         plumerise_flag,num_plume_data,                    &
         ppm2ugkg,                                             &
         mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr,       &
         firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr,       &
         moist,chem,plumedist,ebu_in,                                   &
-        ivgtyp,              &
+        ivgtyp,ca_emis_plume,doing_sgs_emis,              &
         ids,ide, jds,jde, kds,kde,                                     &
         ims,ime, jms,jme, kms,kme,                                     &
         its,ite, jts,jte, kts,kte)
@@ -291,6 +303,8 @@ contains
     integer, dimension(ims:ime), intent(in) :: vegtype
     integer, intent(in) :: ntrac
     integer, intent(in) :: ntso2,ntpp25,ntbc1,ntoc1,ntpp10
+    logical, intent(in) :: doing_sgs_emis
+    real(kind=kind_phys), intent(in) :: ca_emis_plume(:)
     real(kind=kind_phys), dimension(ims:ime,     5),   intent(in) :: fire_GBBEPx
     real(kind=kind_phys), dimension(ims:ime,    13),   intent(in) :: fire_MODIS
     real(kind=kind_phys), dimension(ims:ime, kms:kme), intent(in) ::     &
@@ -308,7 +322,7 @@ contains
                            its,ite, jts,jte, kts,kte
 
     real(kind_phys), dimension(num_chem), intent(in) :: ppm2ugkg
-
+    real(kind_phys), dimension(:, :), intent(out) :: ca_sgs_gbbepx_frp_with_j
     real(kind_phys), dimension(ims:ime, jms:jme, num_ebu_in),intent(out) :: ebu_in
     
     integer,dimension(ims:ime, jms:jme), intent(out) :: ivgtyp
@@ -463,9 +477,22 @@ contains
           emiss_abu(i,j,p_e_oc)   =fire_GBBEPx(i,2)
           emiss_abu(i,j,p_e_pm_25)=fire_GBBEPx(i,3)
           emiss_abu(i,j,p_e_so2)  =fire_GBBEPx(i,4)
-          plume(i,j,1)            =fire_GBBEPx(i,5)
          enddo
         enddo
+        if(doing_sgs_emis) then
+          do j=jts,jte
+           do i=its,ite
+             ca_sgs_gbbepx_frp_with_j(i,j) = fire_GBBEPx(i,5)
+             plume(i,j,1)            =ca_emis_plume(i)! *0.5 + fire_GBBEPx(i,5)*0.5
+           enddo
+          enddo
+        else
+          do j=jts,jte
+           do i=its,ite
+             plume(i,j,1)            =fire_GBBEPx(i,5)
+           enddo
+          enddo
+        endif
 !        print*,'hli GBBEPx plume',maxval(plume(:,:,1))
       case default
           ! -- no further option available
