@@ -68,7 +68,7 @@ contains
     real(kind_phys), dimension(im,kme), intent(in) :: ph3d
     real(kind_phys), dimension(im,kte), intent(in) :: prl3d, tk3d, spechum
     real(kind_phys), dimension(im,kte,ntrac), intent(inout) :: gq0
-    real(kind_phys), dimension(im,7        ), intent(inout) :: abem
+    real(kind_phys), dimension(im,14        ), intent(inout) :: abem
     integer,         intent(in) :: lmk
     real(kind_phys), dimension(im, lmk, 14, 3),intent(inout) :: faersw_cpl
     logical, intent(in) :: cplchm_rad_opt
@@ -88,6 +88,13 @@ contains
 !>- optical variables
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme) :: relhum
     real(kind_phys), dimension(ims:im,         jms:jme) :: aod
+    real(kind_phys), dimension(ims:im,         jms:jme) :: aodbc
+    real(kind_phys), dimension(ims:im,         jms:jme) :: aodoc
+    real(kind_phys), dimension(ims:im,         jms:jme) :: aoddt
+    real(kind_phys), dimension(ims:im,         jms:jme) :: aodss
+    real(kind_phys), dimension(ims:im,         jms:jme) :: aodsu
+    real(kind_phys), dimension(ims:im,         jms:jme) :: sca
+    real(kind_phys), dimension(ims:im,         jms:jme) :: aaod
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:nbands) :: extt
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:nbands) :: ssca
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:nbands) :: asympar
@@ -99,6 +106,13 @@ contains
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_bscat_coef) :: bscat_coeff
     real(kind_phys), dimension(ims:im, kms:kme, jms:jme, 1:num_asym_par)   :: asym_par
     real(kind_phys), dimension(im) :: aod2d
+    real(kind_phys), dimension(im) :: aodbc2d
+    real(kind_phys), dimension(im) :: aodoc2d
+    real(kind_phys), dimension(im) :: aoddt2d
+    real(kind_phys), dimension(im) :: aodss2d
+    real(kind_phys), dimension(im) :: aodsu2d
+    real(kind_phys), dimension(im) :: sca2d
+    real(kind_phys), dimension(im) :: aaod2d
     real(kind_phys), dimension(im, kte, 1:nbands) :: ext_cof, sscal, asymp
 
 !>-- local variables
@@ -190,9 +204,8 @@ contains
           store_arrays = .true.
         case (2)
           call aero_opt('sw',dz8w,chem                                  &
-                   ,rri,relhum,aod                                      &
-!                  ,extt,ssca,asympar                                   &
-                   ,extt,ssca,asympar,num_chem                          &
+                   ,rri,relhum,aod,aodbc,aodoc,aoddt,aodss,aodsu&
+                   ,extt,ssca,asympar,sca,aaod,num_chem                          &
                    ,ids,ide, jds,jde, kds,kde                           &
                    ,ims,ime, jms,jme, kms,kme                           &
                    ,its,ite, jts,jte, kts,kte)
@@ -211,10 +224,24 @@ contains
           end do
         end do
         aod2d(its:ite) = aod(its:ite,1)
+        aodoc2d(its:ite) = aodoc(its:ite,1)
+        aodbc2d(its:ite) = aodbc(its:ite,1)
+        aoddt2d(its:ite) = aoddt(its:ite,1)
+        aodss2d(its:ite) = aodss(its:ite,1)
+        aodsu2d(its:ite) = aodsu(its:ite,1)
+        sca2d(its:ite) = sca(its:ite,1)
+        aaod2d(its:ite) = aaod(its:ite,1)
       end if
     endif
 
     abem(:,7)=aod2d(:)
+    abem(:,8)=aodbc2d(:)
+    abem(:,9)=aodoc2d(:)
+    abem(:,10)=aoddt2d(:)
+    abem(:,11)=aodss2d(:)
+    abem(:,12)=aodsu2d(:)
+    abem(:,13)=sca2d(:)
+    abem(:,14)=aaod2d(:)
 
 !>---- feedback to radiation
     if (cplchm_rad_opt) then

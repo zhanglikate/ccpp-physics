@@ -261,6 +261,8 @@ contains
           fluxr(i,37) = fluxr(i,37) + fhswr*aerodp(i,4)  ! OC aod at 550nm
           fluxr(i,38) = fluxr(i,38) + fhswr*aerodp(i,5)  ! SU aod at 550nm
           fluxr(i,39) = fluxr(i,39) + fhswr*aerodp(i,6)  ! SS aod at 550nm
+          fluxr(i,46) = fluxr(i,46) + fhswr*aerodp(i,7)  ! scat at 550nm !lzhang
+          fluxr(i,46) = fluxr(i,47) + fhswr*aerodp(i,8)  ! aaod at 550nm !lzhang
           if (coszen(i) > 0.) then
              ! SW all-sky fluxes
              tem0d = fhswr * coszdg(i) / coszen(i)
