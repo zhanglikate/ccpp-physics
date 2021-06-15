@@ -193,7 +193,7 @@
       integer, parameter, public :: NSPC    = 5
 !> total+species
       !integer, parameter, public :: NSPC1   = NSPC + 1
-      integer, parameter, public :: NSPC1   = NSPC + 3 !zhang
+      integer, parameter, public :: NSPC1   = NSPC + 5 !zhang
 
       real (kind=kind_phys), parameter :: f_zero = 0.0
       real (kind=kind_phys), parameter :: f_one  = 1.0
@@ -3082,6 +3082,10 @@
            aerodp(i,NSPC+3) = aerodp(i,NSPC+3) +                        &
      &                       tauae(k,nv_aod)*(1-ssaae(k,nv_aod))        
          enddo
+!  ---  total scat (optional) !lzhang
+           aerodp(i,NSPC+4) = tauae(1,nv_aod)*ssaae(1,nv_aod)
+!  ---  total aaod (optional) !lzhang
+           aerodp(i,NSPC+5) = tauae(1,nv_aod)*(1-ssaae(1,nv_aod))
         endif     ! end if_larsw_block
 
         if ( laerlw ) then

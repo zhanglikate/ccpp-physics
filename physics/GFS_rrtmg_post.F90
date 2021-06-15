@@ -88,6 +88,8 @@
              fluxr(i,39) = aerodp(i,6)  ! SS aod at 550nm
              fluxr(i,46) = aerodp(i,7)  ! SCAT  at 550nm lzhang
              fluxr(i,47) = aerodp(i,8)  ! AAOD  at 550nm lzhang
+             fluxr(i,48) = aerodp(i,9)  ! SCAT  at surface of 550nm lzhang
+             fluxr(i,49) = aerodp(i,10)  ! AAOD  at surface 550nm lzhang
           enddo
         endif
 
