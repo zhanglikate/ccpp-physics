@@ -15,7 +15,7 @@
                                          ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,   &
                                          ntgnc, nthl, nthnc, nthv, ntgv,                 &
                                          cscnv, satmedmf, trans_trac, ras, ntrac,        &
-                                         dtidx, index_of_process_dcnv, errmsg, errflg)
+                                         dtidx, index_of_process_dcnv, cplchp, dqdti, errmsg, errflg)
 
       use machine, only: kind_phys
 
@@ -23,7 +23,7 @@
 
       integer, intent(in) :: im, levs, nsamftrac, ntqv, index_of_process_dcnv, dtidx(:,:), &
            ntcw,ntiw,ntclamt,ntrw,ntsw,ntrnc,ntsnc,ntgl,ntrac,ntgnc,nthl,nthnc,nthv,ntgv
-      logical, intent(in) :: ldiag3d, qdiag3d, do_cnvgwd, cplchm
+      logical, intent(in) :: ldiag3d, qdiag3d, do_cnvgwd, cplchm, cplchp
       real(kind=kind_phys), dimension(:,:),   intent(in)    :: gu0
       real(kind=kind_phys), dimension(:,:),   intent(in)    :: gv0
       real(kind=kind_phys), dimension(:,:),   intent(in)    :: gt0
@@ -32,6 +32,8 @@
       real(kind=kind_phys), dimension(:,:),   intent(inout) :: save_v
       real(kind=kind_phys), dimension(:,:),   intent(inout) :: save_t
       real(kind=kind_phys), dimension(:,:,:), intent(inout) :: save_q
+      ! dqdti only allocated if cplchm is .true.
+      real(kind=kind_phys), dimension(:,:),     intent(inout) :: dqdti
       character(len=*), intent(out) :: errmsg
       integer, intent(out) :: errflg
       logical, intent(in) :: cscnv, satmedmf, trans_trac, ras
@@ -83,6 +85,10 @@
             enddo
          endif ! end if_ras or cfscnv or samf
          save_q(:,:,ntqv) = gq0(:,:,ntqv)
+      endif
+
+      if (cplchp) then
+        dqdti = zero
       endif
 
     end subroutine GFS_DCNV_generic_pre_run
