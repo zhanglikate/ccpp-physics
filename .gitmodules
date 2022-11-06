@@ -5,3 +5,4 @@
 [submodule "GOCART"]
 	path = GOCART
 	url = https://github.com/haiqinli/GOCART
+        branch = main-chem2
