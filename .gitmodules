@@ -2,7 +2,3 @@
   path = physics/rte-rrtmgp
   url = https://github.com/earth-system-radiation/rte-rrtmgp
   branch = dtc/ccpp
-[submodule "GOCART"]
-	path = GOCART
-	url = https://github.com/haiqinli/GOCART
-        branch = main-chem2

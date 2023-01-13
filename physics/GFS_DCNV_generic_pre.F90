@@ -62,7 +62,7 @@
         enddo
       endif
 
-      if ((ldiag3d.and.qdiag3d) .or. cplchm) then
+      if ((ldiag3d.and.qdiag3d) .or. cplchm .or. cplchp) then
          if (cscnv .or. satmedmf .or. trans_trac .or. ras) then
             tracers = 2
             do n=2,ntrac

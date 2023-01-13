@@ -236,7 +236,7 @@ contains
       !print*,'hli dust5 i',i,chem(i,110:kme,1,p_dust_5)
       !enddo
      !endif
-    chem(:,110:kme,1,p_dust_5)=epsilc
+    !chem(:,110:kme,1,p_dust_5)=epsilc  !lzhang
 
     ! -- put chem stuff back into tracer array
     do k=kts,kte

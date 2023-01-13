@@ -400,7 +400,6 @@ contains
      enddo
     enddo
 
-
     factor=0.
     k=kts
     if (p_bc2 > 1) then
@@ -416,8 +415,7 @@ contains
         enddo
       enddo
     endif
-
- 
+  
     do k=kms,kte
      do i=ims,ime
        chem(i,k,jts,p_so2   )=max(epsilc,gq0(i,k,ntso2  )/ppm2ugkg(p_so2))
@@ -432,7 +430,6 @@ contains
     !
     ! -- gocart background fields only if gocart is called
     !
-
 !   emis_ant=0.
     nv=1
     k=kts

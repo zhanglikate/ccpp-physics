@@ -137,7 +137,7 @@ contains
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
-    endif
+    endif 
 
     ! -- put chem stuff back into tracer array
     do k=kts,kte

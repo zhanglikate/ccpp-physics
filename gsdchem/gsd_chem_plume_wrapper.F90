@@ -168,6 +168,7 @@ contains
       enddo
     endif
 
+
     ! compute wild-fire plumes
     if (call_plume) then
       call plumerise_driver (ktau,dtstep,num_chem,num_ebu,num_ebu_in,   &
@@ -181,7 +182,6 @@ contains
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte                                )
     end if
-
     ! -- add biomass burning emissions at every timestep
     if (biomass_burn_opt == BURN_OPT_ENABLE) then
       jp = jte

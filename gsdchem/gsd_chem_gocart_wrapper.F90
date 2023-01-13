@@ -161,7 +161,7 @@ contains
         ids,ide, jds,jde, kds,kde,                                      &
         ims,ime, jms,jme, kms,kme,                                      &
         its,ite, jts,jte, kts,kte)
-!    print*,'hli test2 ktau',ktau
+     !write (*,*) 'hli test2 ktau',call_gocart
 
     if (call_gocart) then
       call gocart_chem_driver(ktau,dt,dtstep,gmt,julday,xcosz,          &
@@ -452,20 +452,20 @@ contains
                 ip = i - its + 1
                 if (chem_opt == CHEM_OPT_GOCART) then
                   do n=1,num_chem
-                    chem(i,k,j,n)=1.e-12
+                    chem(i,k,j,n)=1.e-20
                   enddo
                 endif  ! chem_opt==300
-                chem(i,k,j,p_so2)=5.e-6
-                chem(i,k,j,p_sulf)=3.e-6
+                chem(i,k,j,p_so2)=5.e-10
+                chem(i,k,j,p_sulf)=3.e-10
                 if ((chem_opt >= CHEM_OPT_GOCART) .and. (chem_opt < CHEM_OPT_MAX)) then
-                  chem(i,k,j,p_msa)=0.1e-6
-                  chem(i,k,j,p_dms)=0.1e-6
-                  chem(i,k,j,p_bc1)=0.1e-3
-                  chem(i,k,j,p_bc2)=0.1e-3
-                  chem(i,k,j,p_oc1)=0.1e-3
-                  chem(i,k,j,p_oc2)=0.1e-3
-                  chem(i,k,j,p_p25)=0.1e-3 !lzhang
-                  chem(i,k,j,p_p10)=0.1e-3 !lzhang
+                  chem(i,k,j,p_msa)=0.1e-10
+                  chem(i,k,j,p_dms)=0.1e-10
+                  chem(i,k,j,p_bc1)=0.1e-30
+                  chem(i,k,j,p_bc2)=0.1e-30
+                  chem(i,k,j,p_oc1)=0.1e-30
+                  chem(i,k,j,p_oc2)=0.1e-30
+                  chem(i,k,j,p_p25)=0.1e-30 !lzhang
+                  chem(i,k,j,p_p10)=0.1e-30 !lzhang
                 endif !chem_opt >= 300 .and. chem_opt <  500
 
 !                if ((chem_opt == CHEM_OPT_GOCART_RACM) .or. (chem_opt == CHEM_OPT_RACM_SOA_VBS)) then  !added o3 background !lzhang
