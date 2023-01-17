@@ -20,10 +20,10 @@
 !> @{
       subroutine GFS_MP_generic_post_run(                                                                                 &
         im, levs, kdt, nrcm, nncl, ntcw, ntrac, imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_nssl,    &
-        imp_physics_mg, imp_physics_fer_hires, cal_pre, cplflx, cplchm, con_g, rainmin, dtf, frain, rainc,                &
+        imp_physics_mg, imp_physics_fer_hires, cal_pre, cplflx, cplchm, cplchp, con_g, rainmin, dtf, frain, rainc,        &
         rain1, rann, xlat, xlon, gt0, gq0, prsl, prsi, phii, tsfc, ice, snow, graupel, save_t, save_q, rain0, ice0, snow0,&
         graupel0, del, rain, domr_diag, domzr_diag, domip_diag, doms_diag, tprcp, srflag, sr, cnvprcp, totprcp, totice,   &
-        totsnw, totgrp, cnvprcpb, totprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rainc_cpl, snow_cpl, pwat,               &
+        totsnw, totgrp, cnvprcpb, totprcpb, toticeb, totsnwb, totgrpb, rain_cpl, rain_cplchp, rainc_cpl, snow_cpl, pwat,  &
         drain_cpl, dsnow_cpl, lsm, lsm_ruc, lsm_noahmp, raincprv, rainncprv, iceprv, snowprv,                             &
         graupelprv, draincprv, drainncprv, diceprv, dsnowprv, dgraupelprv, dtp, dfi_radar_max_intervals,                  &
         dtend, dtidx, index_of_temperature, index_of_process_mp,ldiag3d, qdiag3d, lssav, num_dfi_radar, fh_dfi_radar,     &
@@ -36,7 +36,7 @@
       integer, intent(in) :: im, levs, kdt, nrcm, nncl, ntcw, ntrac, num_dfi_radar, index_of_process_dfi_radar
       integer, intent(in) :: imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_mg, imp_physics_fer_hires
       integer, intent(in) :: imp_physics_nssl
-      logical, intent(in) :: cal_pre, lssav, ldiag3d, qdiag3d, cplflx, cplchm
+      logical, intent(in) :: cal_pre, lssav, ldiag3d, qdiag3d, cplflx, cplchm,cplchp
       integer, intent(in) :: index_of_temperature,index_of_process_mp
 
       integer                                                :: dfi_radar_max_intervals
@@ -60,7 +60,7 @@
       real(kind=kind_phys), dimension(:),      intent(inout) :: rain, domr_diag, domzr_diag, domip_diag, doms_diag, tprcp,  &
                                                                 srflag, cnvprcp, totprcp, totice, totsnw, totgrp, cnvprcpb, &
                                                                 totprcpb, toticeb, totsnwb, totgrpb, pwat
-      real(kind=kind_phys), dimension(:),      intent(inout) :: rain_cpl, rainc_cpl, snow_cpl
+      real(kind=kind_phys), dimension(:),      intent(inout) :: rain_cpl, rain_cplchp, rainc_cpl, snow_cpl
 
       real(kind=kind_phys), dimension(:,:,:),   intent(inout) :: dtend
       integer,         dimension(:,:), intent(in)    :: dtidx
@@ -352,12 +352,18 @@
         endif if_tendency_diagnostics
       endif if_save_fields
 
-      if (cplflx .or. cplchm) then
+      if (cplflx .or. cplchm .or. cplchp) then
         do i = 1, im
           dsnow_cpl(i)= max(zero, rain(i) * srflag(i))
           drain_cpl(i)= max(zero, rain(i) - dsnow_cpl(i))
           rain_cpl(i) = rain_cpl(i) + drain_cpl(i)
           snow_cpl(i) = snow_cpl(i) + dsnow_cpl(i)
+        enddo
+      endif
+
+      if (cplchp) then
+        do i = 1, im
+          rain_cplchp(i) = rain_cpl(i) + snow_cpl(i)
         enddo
       endif
 
