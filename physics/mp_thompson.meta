@@ -144,6 +144,13 @@
   dimensions = ()
   type = logical
   intent = in
+[cplchp]
+  standard_name = flag_for_chemistry_package_coupling
+  long_name = flag controlling cplchp collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
 [nc]
   standard_name = mass_number_concentration_of_cloud_liquid_water_particles_in_air
   long_name = cloud droplet number concentration
@@ -594,6 +601,119 @@
   units = flag
   dimensions = ()
   type = logical
+  intent = in
+[gq0]
+  standard_name = tracer_concentration_of_new_state
+  long_name = tracer concentration updated by physics
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
+  intent = inout
+[ntdu1]
+  standard_name = index_for_dust_bin1
+  long_name = index for dust bin1
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntdu2]
+  standard_name = index_for_dust_bin2
+  long_name = index for dust bin2
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntdu3]
+  standard_name = index_for_dust_bin3
+  long_name = index for dust bin3
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntdu4]
+  standard_name = index_for_dust_bin4
+  long_name = index for dust bin4
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntdu5]
+  standard_name = index_for_dust_bin5
+  long_name = index for dust bin5
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntss1]
+  standard_name = index_for_seasalt_bin1
+  long_name = index for seasalt bin1
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntss2]
+  standard_name = index_for_seasalt_bin2
+  long_name = index for seasalt bin2
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntss3]
+  standard_name = index_for_seasalt_bin3
+  long_name = index for seasalt bin3
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntss4]
+  standard_name = index_for_seasalt_bin4
+  long_name = index for seasalt bin4
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntss5]
+  standard_name = index_for_seasalt_bin5
+  long_name = index for seasalt bin5
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntsu]
+  standard_name = index_for_sulfate
+  long_name = index for sulfate
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntbcb]
+  standard_name = index_for_bcphobic
+  long_name = index for bcphobic
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntbcl]
+  standard_name = index_for_bcphilic
+  long_name = index for bcphilic
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntocb]
+  standard_name = index_for_ocphobic
+  long_name = index for ocphobic
+  units = index
+  dimensions = ()
+  type = integer
+  intent = in
+[ntocl]
+  standard_name = index_for_ocphilic
+  long_name = index for ocphilic
+  units = index
+  dimensions = ()
+  type = integer
   intent = in
 [mpicomm]
   standard_name = mpi_communicator
