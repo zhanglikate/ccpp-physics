@@ -25,6 +25,7 @@ module mp_thompson
 
       integer, parameter :: ext_ndiag3d = 37
 
+      integer, parameter :: num_aero = 15
    contains
 
 !> This subroutine is a wrapper around the actual thompson_init().
@@ -36,7 +37,7 @@ module mp_thompson
                                   imp_physics_thompson, convert_dry_rho,   &
                                   spechum, qc, qr, qi, qs, qg, ni, nr,     &
                                   is_aerosol_aware,  merra2_aerosol_aware, &
-                                  nc, nwfa2d, nifa2d,                      &
+                                  cplchp, nc, nwfa2d, nifa2d,              &
                                   nwfa, nifa, tgrs, prsl, phil, area,      &
                                   aerfld, mpicomm, mpirank, mpiroot,       &
                                   threads, ext_diag, diag3d,               &
@@ -64,6 +65,7 @@ module mp_thompson
          ! Aerosols
          logical,                   intent(in   ) :: is_aerosol_aware
          logical,                   intent(in   ) :: merra2_aerosol_aware
+         logical,                   intent(in   ) :: cplchp 
          real(kind_phys),           intent(inout) :: nc(:,:)
          real(kind_phys),           intent(inout) :: nwfa(:,:)
          real(kind_phys),           intent(inout) :: nifa(:,:)
@@ -119,7 +121,7 @@ module mp_thompson
             end if
          end if
 
-         if (is_aerosol_aware .and. merra2_aerosol_aware) then
+         if ((is_aerosol_aware .and. merra2_aerosol_aware ) .and. (.not. cplchp) ) then
             write(errmsg,'(*(a))') "Logic error: Only one Thompson aerosol option can be true, either is_aerosol_aware or merra2_aerosol_aware)"
             errflg = 1
             return
@@ -128,6 +130,7 @@ module mp_thompson
          ! Call Thompson init
          call thompson_init(is_aerosol_aware_in=is_aerosol_aware,              &
                             merra2_aerosol_aware_in=merra2_aerosol_aware,      &
+                            cplchp_in=cplchp,                                  &
                             mpicomm=mpicomm, mpirank=mpirank, mpiroot=mpiroot, &
                             threads=threads, errmsg=errmsg, errflg=errflg)
          if (errflg /= 0) return
@@ -168,7 +171,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys-spechum)
            nr = nr/(1.0_kind_phys-spechum)
-           if (is_aerosol_aware .or. merra2_aerosol_aware) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp)) then
               nc = nc/(1.0_kind_phys-spechum)
               nwfa = nwfa/(1.0_kind_phys-spechum)
               nifa = nifa/(1.0_kind_phys-spechum)
@@ -192,7 +195,7 @@ module mp_thompson
 
          !..Check for existing aerosol data, both CCN and IN aerosols.  If missing
          !.. fill in just a basic vertical profile, somewhat boundary-layer following.
-         if (is_aerosol_aware) then
+         if (is_aerosol_aware .and. (.not. cplchp) ) then
 
            ! Potential cloud condensation nuclei (CCN)
            if (MAXVAL(nwfa) .lt. eps) then
@@ -300,7 +303,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys+qv)
            nr = nr/(1.0_kind_phys+qv)
-           if (is_aerosol_aware .or. merra2_aerosol_aware) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp)) then
               nc = nc/(1.0_kind_phys+qv)
               nwfa = nwfa/(1.0_kind_phys+qv)
               nifa = nifa/(1.0_kind_phys+qv)
@@ -332,6 +335,10 @@ module mp_thompson
                               refl_10cm, fullradar_diag,           &
                               max_hail_diam_sfc,                   &
                               do_radar_ref, aerfld,                &
+                              gq0, ntdu1, ntdu2, ntdu3, ntdu4,     &
+                              ntdu5, ntss1, ntss2,ntss3, ntss4,    &
+                              ntss5, ntsu, ntbcb, ntbcl, ntocb,    &
+                              ntocl,                               & 
                               mpicomm, mpirank, mpiroot, blkno,    &
                               ext_diag, diag3d, reset_diag3d,      &
                               spp_wts_mp, spp_mp, n_var_spp,       &
@@ -369,6 +376,7 @@ module mp_thompson
          real(kind_phys), optional, intent(in   ) :: nwfa2d(:)
          real(kind_phys), optional, intent(in   ) :: nifa2d(:)
          real(kind_phys),           intent(in)    :: aerfld(:,:,:)
+         real(kind_phys),           intent(inout) :: gq0(:,:,:)
          logical,         optional, intent(in   ) :: aero_ind_fdb
          ! State variables and timestep information
          real(kind_phys),           intent(inout) :: tgrs(:,:)
@@ -415,12 +423,16 @@ module mp_thompson
          character(len=10),          intent(in) :: spp_var_list(:)
          real(kind_phys),           intent(in) :: spp_stddev_cutoff(:)
 
+         integer, intent(in) :: ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1,ntss2, ntss3,  &
+                                ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
          logical, intent (in) :: cplchm, cplchp
          ! ice and liquid water 3d precipitation fluxes - only allocated if cplchm is .true.
          real(kind=kind_phys), intent(inout), dimension(:,:) :: pfi_lsan
          real(kind=kind_phys), intent(inout), dimension(:,:) :: pfl_lsan
 
          ! Local variables
+         real(kind_phys) :: aero3d(1:ncol,1:nlev,1:num_aero)
+         real(kind_phys) :: aero3d_before(1:ncol,1:nlev,1:num_aero)
 
          ! Reduced time step if subcycling is used
          real(kind_phys) :: dtstep
@@ -564,6 +576,12 @@ module mp_thompson
            call get_niwfa(aerfld, nifa, nwfa, ncol, nlev)
          end if
 
+         if (cplchp) then
+           call get_aero(aero3d,gq0,  ncol, nlev, &
+                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
+          aero3d_before (:,:,:)=aero3d(:,:,:)
+         end if
          !> - Convert specific humidity to water vapor mixing ratio.
          !> - Also, hydrometeor variables are mass or number mixing ratio
          !> - either kg of species per kg of dry air, or per kg of (dry + vapor).
@@ -582,7 +600,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys-spechum)
            nr = nr/(1.0_kind_phys-spechum)
-           if (is_aerosol_aware .or. merra2_aerosol_aware) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp)) then
               nc = nc/(1.0_kind_phys-spechum)
               nwfa = nwfa/(1.0_kind_phys-spechum)
               nifa = nifa/(1.0_kind_phys-spechum)
@@ -690,7 +708,7 @@ module mp_thompson
             qcten3     => diag3d(:,:,37:37)
          end if set_extended_diagnostic_pointers
          !> - Call mp_gt_driver() with or without aerosols, with or without effective radii, ...
-         if (is_aerosol_aware .or. merra2_aerosol_aware) then
+         if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp) ) then
             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
                               nc=nc, nwfa=nwfa, nifa=nifa, nwfa2d=nwfa2d, nifa2d=nifa2d,     &
                               tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
@@ -733,7 +751,9 @@ module mp_thompson
                               qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
          else
+            if (cplchp) then
             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
+                              aero3d=aero3d,                                                 &   
                               tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
                               sedi_semi=sedi_semi, decfl=decfl, lsm=islmsk,                  &
                               rainnc=rain_mp, rainncv=delta_rain_mp,                         &
@@ -772,7 +792,55 @@ module mp_thompson
                               qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
                               qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
+             else
+             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
+                              tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
+                              sedi_semi=sedi_semi, decfl=decfl, lsm=islmsk,                  &
+                              rainnc=rain_mp, rainncv=delta_rain_mp,                         &
+                              snownc=snow_mp, snowncv=delta_snow_mp,                         &
+                              icenc=ice_mp, icencv=delta_ice_mp,                             &
+                              graupelnc=graupel_mp, graupelncv=delta_graupel_mp, sr=sr,      &
+                              refl_10cm=refl_10cm,                                           &
+                              diagflag=diagflag, do_radar_ref=do_radar_ref_mp,               &
+                              max_hail_diam_sfc=max_hail_diam_sfc,                           &
+                              has_reqc=has_reqc, has_reqi=has_reqi, has_reqs=has_reqs,       &
+                              rand_perturb_on=spp_mp_opt, kme_stoch=kme_stoch,               &
+                              rand_pert=spp_wts_mp, spp_var_list=spp_var_list,               &
+                              spp_prt_list=spp_prt_list, n_var_spp=n_var_spp,                &
+                              spp_stddev_cutoff=spp_stddev_cutoff,                           &
+                              ids=ids, ide=ide, jds=jds, jde=jde, kds=kds, kde=kde,          &
+                              ims=ims, ime=ime, jms=jms, jme=jme, kms=kms, kme=kme,          &
+                              its=its, ite=ite, jts=jts, jte=jte, kts=kts, kte=kte,          &
+                              fullradar_diag=fullradar_diag, istep=istep, nsteps=nsteps,     &
+                              first_time_step=first_time_step, errmsg=errmsg, errflg=errflg, &
+                              ! Extended diagnostics
+                              ext_diag=ext_diag,                                             &
+                              ! vts1=vts1, txri=txri, txrc=txrc,                             &
+                              prw_vcdc=prw_vcdc,                                             &
+                              prw_vcde=prw_vcde, tpri_inu=tpri_inu, tpri_ide_d=tpri_ide_d,   &
+                              tpri_ide_s=tpri_ide_s, tprs_ide=tprs_ide,                      &
+                              tprs_sde_d=tprs_sde_d,                                         &
+                              tprs_sde_s=tprs_sde_s, tprg_gde_d=tprg_gde_d,                  &
+                              tprg_gde_s=tprg_gde_s, tpri_iha=tpri_iha,                      &
+                              tpri_wfz=tpri_wfz, tpri_rfz=tpri_rfz, tprg_rfz=tprg_rfz,       &
+                              tprs_scw=tprs_scw, tprg_scw=tprg_scw, tprg_rcs=tprg_rcs,       &
+                              tprs_rcs=tprs_rcs,                                             &
+                              tprr_rci=tprr_rci, tprg_rcg=tprg_rcg, tprw_vcd_c=tprw_vcd_c,   &
+                              tprw_vcd_e=tprw_vcd_e, tprr_sml=tprr_sml, tprr_gml=tprr_gml,   &
+                              tprr_rcg=tprr_rcg, tprr_rcs=tprr_rcs,                          &
+                              tprv_rev=tprv_rev, tten3=tten3,                                &
+                              qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
+                              qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
+                              qcten3=qcten3, pfils=pfils, pflls=pflls)
+             end if
          end if
+
+         if (cplchp) then
+           call update_aero(aero3d,gq0,ncol, nlev, &
+                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl )
+         end if 
+
          if (errflg/=0) return
 
          ! DH* - do this only if istep == nsteps? Would be ok if it was
@@ -791,7 +859,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys+qv)
            nr = nr/(1.0_kind_phys+qv)
-           if (is_aerosol_aware .or. merra2_aerosol_aware) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp) ) then
               nc = nc/(1.0_kind_phys+qv)
               nwfa = nwfa/(1.0_kind_phys+qv)
               nifa = nifa/(1.0_kind_phys+qv)
@@ -931,5 +999,120 @@ module mp_thompson
               aerfld(:,:,9)/206.2216+ aerfld(:,:,10)/4326.23)*9.+aerfld(:,:,11)/0.3053104*5+ &
               aerfld(:,:,15)/0.3232698*8)*1.e15
       end subroutine get_niwfa
+
+!lzhang
+      subroutine get_aero(aero3d,aerfld, ncol, nlev,&
+                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
+         ! To calculate nifa and nwfa from bins of aerosols.
+         ! In GOCART and MERRA2, aerosols are given as mixing ratio (kg/kg). To
+         ! convert from kg/kg to #/kg, the "unit mass" (mass of one particle)
+         ! within the mass bins is calculated. A lognormal size distribution
+         ! within aerosol bins is used to find the size based upon the median
+         ! mass. NIFA is mainly summarized over five dust bins and NWFA over the
+         ! other 10 bins. The parameters besides each bins are carefully tuned
+         ! for a good performance of the scheme.
+         !
+         ! The fields for the last index of the qgrs array
+         ! are specified as below.
+         ! 1: dust bin 1,                     0.1 to 1.0  micrometers
+         ! 2: dust bin 2,                     1.0 to 1.8  micrometers
+         ! 3: dust bin 3,                     1.8 to 3.0  micrometers
+         ! 4: dust bin 4,                     3.0 to 6.0  micrometers
+         ! 5: dust bin 5,                     6.0 to 10.0 micrometers
+         !reff_dust = (/ 0.73D-6, 1.4D-6, 2.4D-6, 4.5D-6, 8.0D-6 /) meters
+         ! 6: sea salt bin 1,                 0.03 to 0.1 micrometers
+         ! 7: sea salt bin 2,                 0.1 to 0.5  micrometers
+         ! 8: sea salt bin 3,                 0.5 to 1.5  micrometers 
+         ! 9: sea salt bin 4,                 1.5 to 5.0  micrometers
+         ! 10: sea salt bin 5,                5.0 to 10.0 micrometers
+         !reff_seas = (/ 0.079e-6, 0.316e-6, 1.119e-6, 2.818e-6, 7.772e-6 /) meters
+         ! 11: Sulfate,                       0.0695D (mean) micrometers
+         ! 12: bc1 (hydrophobic)              0.35 (mean) micrometers
+         ! 13: bc2 (hydrophilic)              0.35 (mean) micrometers
+         ! 14: oc1 (hydrophobic)              0.35 (mean) micrometers
+         ! 15: oc2 (hydrophilic) water-friendly organic carbon, 0.35 (mean) micrometers
+         !
+         ! Bin densities are as follows:
+         ! 1:    dust bin 1:         2500 kg/m2
+         ! 2-5:  dust bin 2-5:       2650 kg/m2
+         ! 6-10: sea salt bins 6-10: 2200 kg/m2
+         ! 11:   sulfate:            1700 kg/m2
+         ! 15:   organic carbon:     1800 kg/m2
+
+         implicit none
+         integer, intent(in)::ncol, nlev
+         real (kind=kind_phys), dimension(:,:,:), intent(in)  :: aerfld
+         real (kind=kind_phys), dimension(ncol, nlev,num_aero), intent(out)  :: aero3d
+         !real (kind=kind_phys), dimension(:,:),   intent(out ):: nifa, nwfa
+         integer, intent(in) :: ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,ntss3,  &
+                             ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
+         integer i,k
+
+
+         do k=1,nlev
+          do i=1,ncol
+
+         !nifa(i,k)=(aerfld(i,k,ntdu1)/4.0737762+aerfld(i,k,ntdu2)/30.459203+aerfld(i,k,ntdu3)/153.45048+
+         !&
+         !     aerfld(i,k,ntdu4)/1011.5142+ aerfld(i,k,ntdu5)/5683.3501)*1.e6
+
+         !nwfa(i,k)=((aerfld(i,k,ntss1)/0.0045435214+aerfld(i,k,ntss2)/0.2907854+aerfld(i,k,ntss3)/12.91224+
+         !&
+         !     aerfld(i,k,ntss4)/206.2216+
+         !     aerfld(i,k,ntss5)/4326.23)*9.+aerfld(i,k,ntsu)/0.3053104*5+ &
+         !     aerfld(i,k,ntocl)/0.3232698*8)*1.e6
+
+         aero3d(i,k,1)=aerfld(i,k,ntdu1)/4.0737762*1.e6
+         aero3d(i,k,2)=aerfld(i,k,ntdu2)/30.459203*1.e6
+         aero3d(i,k,3)=aerfld(i,k,ntdu3)/153.45048*1.e6
+         aero3d(i,k,4)=aerfld(i,k,ntdu4)/1011.5142*1.e6
+         aero3d(i,k,5)=aerfld(i,k,ntdu5)/5683.3501*1.e6
+         aero3d(i,k,6)=aerfld(i,k,ntss1)/0.0045435214*9.*1.e6
+         aero3d(i,k,7)=aerfld(i,k,ntss2)/0.2907854*9.*1.e6
+         aero3d(i,k,8)=aerfld(i,k,ntss3)/12.91224*9.*1.e6
+         aero3d(i,k,9)=aerfld(i,k,ntss4)/206.2216*9.*1.e6
+         aero3d(i,k,10)=aerfld(i,k,ntss5)/4326.23*9.*1.e6
+         aero3d(i,k,11)=aerfld(i,k,ntsu)/0.3053104*5*1.e6
+         aero3d(i,k,12)=aerfld(i,k,ntbcb)/0.3232698*8*1.e6
+         aero3d(i,k,13)=aerfld(i,k,ntbcl)/0.3232698*8*1.e6
+         aero3d(i,k,14)=aerfld(i,k,ntocb)/0.3232698*8*1.e6
+         aero3d(i,k,15)=aerfld(i,k,ntocl)/0.3232698*8*1.e6
+          enddo
+         enddo
+
+      end subroutine get_aero
+
+      subroutine update_aero(aero3d,aerfld,ncol, nlev,           &
+                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
+         implicit none
+         integer, intent(in)::ncol, nlev
+         real (kind=kind_phys), dimension(:,:,:), intent(out)  :: aerfld
+         real (kind=kind_phys), dimension(ncol, nlev,num_aero), intent(in)  :: aero3d
+         integer, intent(in) :: ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1,ntss2,ntss3,  &
+                             ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
+         integer i,k
+
+         do k=1,nlev
+          do i=1,ncol
+         aerfld(i,k,ntdu1)=aero3d(i,k,1)*4.0737762/1.e6
+         aerfld(i,k,ntdu2)=aero3d(i,k,2)*30.459203/1.e6
+         aerfld(i,k,ntdu3)=aero3d(i,k,3)*153.45048/1.e6
+         aerfld(i,k,ntdu4)=aero3d(i,k,4)*1011.5142/1.e6
+         aerfld(i,k,ntdu5)=aero3d(i,k,5)*5683.3501/1.e6
+         aerfld(i,k,ntss1)=aero3d(i,k,6)*0.0045435214/(9.*1.e6)
+         aerfld(i,k,ntss2)=aero3d(i,k,7)*0.2907854/(9.*1.e6)
+         aerfld(i,k,ntss3)=aero3d(i,k,8)*12.91224/(9.*1.e6)
+         aerfld(i,k,ntss4)=aero3d(i,k,9)*206.2216/(9.*1.e6)
+         aerfld(i,k,ntss5)=aero3d(i,k,10)*4326.23/(9.*1.e6)
+         aerfld(i,k,ntsu)=aero3d(i,k,11)*0.3053104/(5*1.e6)
+         aerfld(i,k,ntbcb)=aero3d(i,k,12)*0.3232698/(8*1.e6)
+         aerfld(i,k,ntbcl)=aero3d(i,k,13)*0.3232698/(8*1.e6)
+         aerfld(i,k,ntocb)=aero3d(i,k,14)*0.3232698/(8*1.e6)
+         aerfld(i,k,ntocl)=aero3d(i,k,15)*0.3232698/(8*1.e6)
+          enddo
+         enddo
+      end subroutine update_aero
 
 end module mp_thompson
