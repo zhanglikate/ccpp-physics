@@ -72,8 +72,17 @@ MODULE module_mp_thompson
       LOGICAL, PARAMETER, PRIVATE:: iiwarm = .false.
       LOGICAL, PRIVATE:: is_aerosol_aware = .false.
       LOGICAL, PRIVATE:: merra2_aerosol_aware = .false.
+      LOGICAL, PRIVATE:: cplchp = .false.
       LOGICAL, PARAMETER, PRIVATE:: dustyIce = .true.
       LOGICAL, PARAMETER, PRIVATE:: homogIce = .true.
+!lzhang
+      integer, parameter :: num_aero = 15
+      character(len=5), parameter, dimension(num_aero) :: aero_species =       &
+      ["dust1", "dust2", "dust3", "dust4", "dust5", "seas1", "seas2", "seas3", &
+       "seas4", "seas5", "sulf", "bc1", "bc2", "oc1", "oc2"]
+      real, parameter, dimension(num_aero) :: aero_diams =                     &
+      [0.73e-6, 1.4e-6, 2.4e-6, 4.5e-6, 8.0e-6, 0.079e-6, 0.316e-6, 1.119e-6,  & 
+       2.818e-6, 7.772e-6, 0.0695e-6, 0.35e-6, 0.35e-6, 0.35e-6, 0.35e-6]
 
       INTEGER, PARAMETER, PRIVATE:: IFDRY = 0
       REAL, PARAMETER, PRIVATE:: T_0 = 273.15
@@ -441,6 +450,7 @@ MODULE module_mp_thompson
 !> @{
       SUBROUTINE thompson_init(is_aerosol_aware_in,       &
                                merra2_aerosol_aware_in,   &
+                               cplchp_in,                 &
                                mpicomm, mpirank, mpiroot, &
                                threads, errmsg, errflg)
 
@@ -448,6 +458,7 @@ MODULE module_mp_thompson
 
       LOGICAL, INTENT(IN) :: is_aerosol_aware_in
       LOGICAL, INTENT(IN) :: merra2_aerosol_aware_in
+      LOGICAL, INTENT(IN) :: cplchp_in
       TYPE(MPI_Comm), INTENT(IN) :: mpicomm
       INTEGER, INTENT(IN) :: mpirank, mpiroot
       INTEGER, INTENT(IN) :: threads
@@ -459,9 +470,10 @@ MODULE module_mp_thompson
       real :: stime, etime
       LOGICAL, PARAMETER :: precomputed_tables = .FALSE.
 
-! Set module variable is_aerosol_aware/merra2_aerosol_aware
+! Set module variable is_aerosol_aware/merra2_aerosol_aware/cplchp
       is_aerosol_aware = is_aerosol_aware_in
       merra2_aerosol_aware = merra2_aerosol_aware_in
+      cplchp = cplchp_in
       if (is_aerosol_aware .and. merra2_aerosol_aware) then
           errmsg = 'Logic error in thompson_init: only one of the two options can be true, ' // &
                    'not both: is_aerosol_aware or merra2_aerosol_aware'
@@ -983,6 +995,7 @@ MODULE module_mp_thompson
 !> @{
       SUBROUTINE mp_gt_driver(qv, qc, qr, qi, qs, qg, ni, nr, nc,     &
                               nwfa, nifa, nwfa2d, nifa2d,             &
+                              aero3d,                                 &
                               tt, th, pii,                            &
                               p, w, dz, dt_in, dt_inner,              &
                               sedi_semi, decfl, lsm,                  &
@@ -1040,6 +1053,8 @@ MODULE module_mp_thompson
                           pii
       REAL, DIMENSION(ims:ime, kms:kme, jms:jme), OPTIONAL, INTENT(INOUT):: &
                           nc, nwfa, nifa
+      REAL, DIMENSION(ims:ime, kms:kme, jms:jme, 1:num_aero), OPTIONAL,INTENT(INOUT):: &
+                          aero3d
       REAL, DIMENSION(ims:ime, jms:jme), OPTIONAL, INTENT(IN):: nwfa2d, nifa2d
       INTEGER, DIMENSION(ims:ime, jms:jme), INTENT(IN):: lsm
       REAL, DIMENSION(ims:ime, kms:kme, jms:jme), OPTIONAL, INTENT(INOUT):: &
@@ -1121,12 +1136,14 @@ MODULE module_mp_thompson
       REAL, DIMENSION(kts:kte):: &
                           rainprod1d, evapprod1d
 #endif
+!lzhang
+      REAL, DIMENSION(kts:kte,1:num_aero) :: naero1d
       REAL, DIMENSION(its:ite, jts:jte):: pcp_ra, pcp_sn, pcp_gr, pcp_ic
       REAL:: dt, pptrain, pptsnow, pptgraul, pptice
       REAL:: qc_max, qr_max, qs_max, qi_max, qg_max, ni_max, nr_max
       INTEGER:: lsml
       REAL:: rand1, rand2, rand3, rand_pert_max
-      INTEGER:: i, j, k, m
+      INTEGER:: i, j, k, m, nv
       INTEGER:: imax_qc,imax_qr,imax_qi,imax_qs,imax_qg,imax_ni,imax_nr
       INTEGER:: jmax_qc,jmax_qr,jmax_qi,jmax_qs,jmax_qg,jmax_ni,jmax_nr
       INTEGER:: kmax_qc,kmax_qr,kmax_qi,kmax_qs,kmax_qg,kmax_ni,kmax_nr
@@ -1436,12 +1453,18 @@ MODULE module_mp_thompson
                endif
                nwfa1d(k) = 11.1E6
                nifa1d(k) = naIN1*0.01
+              if (cplchp) then
+              do nv = 1, num_aero
+                 naero1d(k,nv)=aero3d(i,k,j,nv)
+              enddo
+              endif
             enddo
          endif
 
 !> - Call mp_thompson()
          call mp_thompson(qv1d, qc1d, qi1d, qr1d, qs1d, qg1d, ni1d,     &
-                      nr1d, nc1d, nwfa1d, nifa1d, t1d, p1d, w1d, dz1d,  &
+                      nr1d, nc1d, nwfa1d, nifa1d, naero1d,              &
+                      t1d, p1d, w1d, dz1d,                              &
                       lsml, pptrain, pptsnow, pptgraul, pptice, &
 #if ( WRF_CHEM == 1 )
                       rainprod1d, evapprod1d, &
@@ -1518,6 +1541,14 @@ MODULE module_mp_thompson
                nc(i,k,j) = nc1d(k)
                nwfa(i,k,j) = nwfa1d(k)
                nifa(i,k,j) = nifa1d(k)
+            enddo
+         endif
+
+         if (cplchp) then
+            do k = kts, kte
+             do nv=1, num_aero
+             aero3d(i,k,j,nv) = max(1.E-20, naero1d(k,nv))
+             enddo
             enddo
          endif
 
@@ -1863,7 +1894,8 @@ MODULE module_mp_thompson
 !>\section gen_mp_thompson  mp_thompson General Algorithm
 !> @{
       subroutine mp_thompson (qv1d, qc1d, qi1d, qr1d, qs1d, qg1d, ni1d,    &
-                          nr1d, nc1d, nwfa1d, nifa1d, t1d, p1d, w1d, dzq,  &
+                          nr1d, nc1d, nwfa1d, nifa1d, naero1d,             &
+                          t1d, p1d, w1d, dzq,                              &
                           lsml, pptrain, pptsnow, pptgraul, pptice,        &
 #if ( WRF_CHEM == 1 )
                           rainprod, evapprod,                              &
@@ -1898,6 +1930,7 @@ MODULE module_mp_thompson
       REAL, DIMENSION(kts:kte), INTENT(INOUT):: &
                           qv1d, qc1d, qi1d, qr1d, qs1d, qg1d, ni1d, &
                           nr1d, nc1d, nwfa1d, nifa1d, t1d
+      REAL, DIMENSION(kts:kte,1:num_aero), INTENT(INOUT) :: naero1d
       REAL, DIMENSION(kts:kte), INTENT(OUT):: pfil1, pfll1
       REAL, DIMENSION(kts:kte), INTENT(IN):: p1d, w1d, dzq
       REAL, INTENT(INOUT):: pptrain, pptsnow, pptgraul, pptice
@@ -1940,6 +1973,12 @@ MODULE module_mp_thompson
 
       DOUBLE PRECISION, DIMENSION(kts:kte):: pna_rca, pna_sca, pna_gca, &
            pnd_rcd, pnd_scd, pnd_gcd
+! lzhang
+      real, dimension(kts:kte, num_aero) :: nchemten
+      double precision, dimension(kts:kte, num_aero) :: pnx_rcx, &
+           pnx_scx, pnx_gcx
+
+      real, dimension(kts:kte, num_aero) :: aero_comb
 
       DOUBLE PRECISION, DIMENSION(kts:kte):: prr_wau, prr_rcw, prr_rcs, &
            prr_rcg, prr_sml, prr_gml, &
@@ -2007,7 +2046,7 @@ MODULE module_mp_thompson
       REAL:: dtsave, odts, odt, odzq, hgt_agl, SR
       REAL:: xslw1, ygra1, zans1, eva_factor
       REAL:: av_i
-      INTEGER:: i, k, k2, n, nn, nstep, k_0, kbot, IT, iexfrq
+      INTEGER:: i, k, k2, n, nn, nstep, k_0, kbot, IT, iexfrq, nv
       INTEGER, DIMENSION(5):: ksed1
       INTEGER:: nir, nis, nig, nii, nic, niin
       INTEGER:: idx_tc, idx_t, idx_s, idx_g1, idx_g, idx_r1, idx_r,     &
@@ -2123,6 +2162,15 @@ MODULE module_mp_thompson
          prg_rcg(k) = 0.
          prg_ihm(k) = 0.
 
+      if (cplchp) then
+         do nv = 1, num_aero
+            pnx_rcx(k,nv) = 0.
+            pnx_scx(k,nv) = 0.
+            pnx_gcx(k,nv) = 0.
+            nchemten(k,nv) = 0.
+         enddo
+      end if
+
          pna_rca(k) = 0.
          pna_sca(k) = 0.
          pna_gca(k) = 0.
@@ -2212,6 +2260,16 @@ MODULE module_mp_thompson
          rho(k) = 0.622*pres(k)/(R*temp(k)*(qv(k)+0.622))
          nwfa(k) = MAX(11.1E6*rho(k), MIN(9999.E6*rho(k), nwfa1d(k)*rho(k)))
          nifa(k) = MAX(naIN1*0.01*rho(k), MIN(9999.E6*rho(k), nifa1d(k)*rho(k)))
+
+!lzhang
+        if (cplchp) then
+!         aero_comb(1,k) = nwfa(k)
+!         aero_comb(2,k) = nifa(k)
+         do nv=1, num_aero
+         aero_comb(k,nv) =  naero1d(k,nv)*rho(k)
+         enddo
+        end if
+
          mvd_r(k) = D0r
          mvd_c(k) = D0c
 
@@ -2555,6 +2613,17 @@ MODULE module_mp_thompson
           pnd_rcd(k) = rhof(k)*t1_qr_qc*Ef_ra*nifa(k)*N0_r(k)           &
                          *((lamr+fv_r)**(-cre(9)))
           pnd_rcd(k) = MIN(DBLE(nifa(k)*odts), pnd_rcd(k))
+
+          if (cplchp) then
+          do nv=1, num_aero
+          Ef_ra = Eff_aero(mvd_r(k),aero_diams(nv),visco(k),rho(k),temp(k),'r')
+          lamr = 1./ilamr(k)
+          pnx_rcx(k,nv) = 100.0*rhof(k)*t1_qr_qc*Ef_ra*aero_comb(k,nv)*N0_r(k) &
+                         *((lamr+fv_r)**(-cre(9)))
+          pnx_rcx(k,nv) = MIN(DBLE(aero_comb(k,nv)*odts),  pnx_rcx(k,nv))
+          enddo
+          endif
+
          endif
 
       enddo
@@ -2759,6 +2828,15 @@ MODULE module_mp_thompson
           Ef_sa = Eff_aero(xDs,0.8E-6,visco(k),rho(k),temp(k),'s')
           pnd_scd(k) = rhof(k)*t1_qs_qc*Ef_sa*nifa(k)*smoe(k)
           pnd_scd(k) = MIN(DBLE(nifa(k)*odts), pnd_scd(k))
+
+          if (cplchp) then
+          do nv=1, num_aero
+          Ef_sa = Eff_aero(xDs,aero_diams(nv),visco(k),rho(k),temp(k),'s')
+          pnx_scx(k,nv) = 100.0*rhof(k)*t1_qs_qc*Ef_sa*aero_comb(k,nv)*smoe(k)
+          pnx_scx(k,nv) = MIN(DBLE(aero_comb(k,nv)*odts), pnx_scx(k,nv))
+          enddo
+          endif
+
          endif
          if (rg(k) .gt. r_g(1)) then
           xDg = (bm_g + mu_g + 1.) * ilamg(k)
@@ -2771,6 +2849,16 @@ MODULE module_mp_thompson
           pnd_gcd(k) = rhof(k)*t1_qg_qc*Ef_ga*nifa(k)*N0_g(k)           &
                         *ilamg(k)**cge(9)
           pnd_gcd(k) = MIN(DBLE(nifa(k)*odts), pnd_gcd(k))
+
+          if (cplchp) then 
+          do nv=1, num_aero
+          Ef_ga = Eff_aero(xDg,aero_diams(nv),visco(k),rho(k),temp(k),'g')
+          pnx_gcx(k,nv) = 100.0*rhof(k)*t1_qg_qc*Ef_ga*aero_comb(k,nv)*N0_g(k) &
+                        *ilamg(k)**cge(9)
+          pnx_gcx(k,nv) = MIN(DBLE(aero_comb(k,nv)*odts), pnx_gcx(k,nv))
+          enddo
+          endif
+
          endif
 
 !>  - Rain collecting snow.  Cannot assume Wisner (1972) approximation
@@ -3221,6 +3309,11 @@ MODULE module_mp_thompson
             else
                nifaten(k) = 0.
             endif
+         else if ( cplchp ) then
+            do nv=1,num_aero
+            nchemten(k,nv) = nchemten(k,nv) - (pnx_rcx(k,nv) + pnx_scx(k,nv) &
+                       + pnx_gcx(k,nv) ) * orho
+            enddo
          endif
 
 !>  - Water vapor tendency
@@ -4232,6 +4325,13 @@ MODULE module_mp_thompson
            nifa1d(k) = MAX(naIN1*0.01, MIN(9999.E6,                       &
                          (nifa1d(k)+nifaten(k)*DT)))
          end if
+!lzhang
+         if (cplchp) then
+           do nv = 1, num_aero
+               naero1d(k,nv) = naero1d(k,nv)+nchemten(k,nv)*DT !MAX(11.1E6,MIN(9999.E6,(naero1d(k,nv)+nchemten(k,nv)*DT)))
+           enddo
+         endif
+
          if (qc1d(k) .le. R1) then
            qc1d(k) = 0.0
            nc1d(k) = 0.0

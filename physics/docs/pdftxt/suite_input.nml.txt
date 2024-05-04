@@ -38,6 +38,7 @@ show some variables in the namelist that must match the SDF.
 <tr><td>cplflx          <td>see \a GFS_typedefs.F90       <td>flag for using fluxes provided by an external model              <td>.false.
 <tr><td>cplwav          <td>see \a GFS_typedefs.F90       <td>flag for using information produced by an external ocean wave model              <td>.false.
 <tr><td>cplchm          <td>see \a GFS_typedefs.F90       <td>flag for coupled chemistry diagnostics           <td>.false.
+<tr><td>cplchp          <td>see \a GFS_typedefs.F90       <td>flag for coupled chemistry package coupling      <td>.false.
 <tr><td>cplwav2atm      <td>see \a GFS_typedefs.F90       <td>flag for wave to atm coupling           <td>.false.
 <tr><td>oz_phys_2015    <td>ozphys_2015               <td>flag for new (2015) ozone physics               <td>.false.
 <tr><td>fhcyc           <td>gfs_phys_time_vary    <td>frequency for surface data cycling in hours     <td>0.0 
