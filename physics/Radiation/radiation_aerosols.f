@@ -158,7 +158,8 @@
 !> total+species
       integer, parameter, public :: NSPC1   = NSPC + 1
 
-      real (kind=kind_phys), parameter :: f_zero = 0.0
+      !real (kind=kind_phys), parameter :: f_zero = 0.0
+      real (kind=kind_phys), parameter :: f_zero = 1.0e-10
       real (kind=kind_phys), parameter :: f_one  = 1.0
 
 !  ---  module control parameters set in subroutine "aer_init"

@@ -37,9 +37,13 @@ module mp_thompson
                                   imp_physics_thompson, convert_dry_rho,   &
                                   spechum, qc, qr, qi, qs, qg, ni, nr,     &
                                   is_aerosol_aware,  merra2_aerosol_aware, &
+                                  gocart_aerosol_aware,                    &
                                   cplchp, nc, nwfa2d, nifa2d,              &
                                   nwfa, nifa, tgrs, prsl, phil, area,      &
-                                  aerfld, mpicomm, mpirank, mpiroot,       &
+                                  aerfld, gq0, ntdu1, ntdu2, ntdu3, ntdu4, &
+                                  ntdu5, ntss1, ntss2,ntss3, ntss4,        &
+                                  ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl, &
+                                  mpicomm, mpirank, mpiroot,               &
                                   threads, ext_diag, diag3d,               &
                                   errmsg, errflg)
 
@@ -65,13 +69,15 @@ module mp_thompson
          ! Aerosols
          logical,                   intent(in   ) :: is_aerosol_aware
          logical,                   intent(in   ) :: merra2_aerosol_aware
+         logical,                   intent(in   ) :: gocart_aerosol_aware
          logical,                   intent(in   ) :: cplchp 
          real(kind_phys),           intent(inout) :: nc(:,:)
          real(kind_phys),           intent(inout) :: nwfa(:,:)
          real(kind_phys),           intent(inout) :: nifa(:,:)
          real(kind_phys),           intent(inout) :: nwfa2d(:)
          real(kind_phys),           intent(inout) :: nifa2d(:)
-         real(kind_phys),           intent(in)    :: aerfld(:,:,:)
+         real(kind_phys),           intent(in   ) :: aerfld(:,:,:)
+         real(kind_phys),           intent(inout) :: gq0(:,:,:)
          ! State variables
          real(kind_phys),           intent(in   ) :: tgrs(:,:)
          real(kind_phys),           intent(in   ) :: prsl(:,:)
@@ -89,7 +95,11 @@ module mp_thompson
          ! CCPP error handling
          character(len=*),          intent(  out) :: errmsg
          integer,                   intent(  out) :: errflg
+         integer,                   intent(in   ) :: ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1,ntss2, ntss3,  &
+                                    ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
 
+         ! Local variables
+!         real(kind_phys) :: aero3d(1:ncol,1:nlev,1:num_aero)         
          !
          real(kind_phys) :: qv(1:ncol,1:nlev)       ! kg kg-1 (water vapor mixing ratio)
          real(kind_phys) :: hgt(1:ncol,1:nlev)      ! m
@@ -121,15 +131,39 @@ module mp_thompson
             end if
          end if
 
-         if ((is_aerosol_aware .and. merra2_aerosol_aware ) .and. (.not. cplchp) ) then
-            write(errmsg,'(*(a))') "Logic error: Only one Thompson aerosol option can be true, either is_aerosol_aware or merra2_aerosol_aware)"
+         if (is_aerosol_aware .and. merra2_aerosol_aware .and. gocart_aerosol_aware)  then
+            write(errmsg,'(*(a))') "Logic error: Only one Thompson aerosol option can be true, either is_aerosol_aware or &
+            merra2_aerosol_aware or gocart_aerosol_aware)"
             errflg = 1
             return
          end if
 
+         if (is_aerosol_aware .and. merra2_aerosol_aware )  then
+            write(errmsg,'(*(a))') "Logic error: Only one Thompson aerosol option can be true, either is_aerosol_aware or &
+            merra2_aerosol_aware or gocart_aerosol_aware)"
+            errflg = 1
+            return
+         end if
+
+         if (is_aerosol_aware .and. gocart_aerosol_aware)  then
+            write(errmsg,'(*(a))') "Logic error: Only one Thompson aerosol option can be true, either is_aerosol_aware or &
+            merra2_aerosol_aware or gocart_aerosol_aware)"
+            errflg = 1
+            return
+         end if
+
+         if (merra2_aerosol_aware .and. gocart_aerosol_aware)  then
+            write(errmsg,'(*(a))') "Logic error: Only one Thompson aerosol option can be true, either is_aerosol_aware or &
+            merra2_aerosol_aware or gocart_aerosol_aware)"
+            errflg = 1
+            return
+         end if
+
+
          ! Call Thompson init
          call thompson_init(is_aerosol_aware_in=is_aerosol_aware,              &
                             merra2_aerosol_aware_in=merra2_aerosol_aware,      &
+                            gocart_aerosol_aware_in=gocart_aerosol_aware,      &
                             cplchp_in=cplchp,                                  &
                             mpicomm=mpicomm, mpirank=mpirank, mpiroot=mpiroot, &
                             threads=threads, errmsg=errmsg, errflg=errflg)
@@ -159,6 +193,11 @@ module mp_thompson
            call get_niwfa(aerfld, nifa, nwfa, ncol, nlev) 
          end if
 
+         if (gocart_aerosol_aware) then
+           call get_aero_int(gq0, nifa, nwfa,ncol, nlev, &
+                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl) 
+         end if
 
          qv = spechum/(1.0_kind_phys-spechum)
 
@@ -171,7 +210,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys-spechum)
            nr = nr/(1.0_kind_phys-spechum)
-           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp)) then
+           if (is_aerosol_aware .or. merra2_aerosol_aware .or. gocart_aerosol_aware)  then
               nc = nc/(1.0_kind_phys-spechum)
               nwfa = nwfa/(1.0_kind_phys-spechum)
               nifa = nifa/(1.0_kind_phys-spechum)
@@ -195,7 +234,7 @@ module mp_thompson
 
          !..Check for existing aerosol data, both CCN and IN aerosols.  If missing
          !.. fill in just a basic vertical profile, somewhat boundary-layer following.
-         if (is_aerosol_aware .and. (.not. cplchp) ) then
+         if (is_aerosol_aware ) then
 
            ! Potential cloud condensation nuclei (CCN)
            if (MAXVAL(nwfa) .lt. eps) then
@@ -279,12 +318,13 @@ module mp_thompson
            ! Copy to local array for calculating cloud effective radii below
            nc_local = nc
  
-        else if (merra2_aerosol_aware) then
+        else if (merra2_aerosol_aware .or. gocart_aerosol_aware) then
 
            ! Ensure we have 1st guess cloud droplet number where mass non-zero but no number.
            where(qc .LE. 0.0) nc=0.0
            where(qc .GT. 0 .and. nc .LE. 0.0) nc = make_DropletNumber(qc*rho, nwfa*rho) * orho
            where(qc .EQ. 0.0 .and. nc .GT. 0.0) nc = 0.0
+
 
          else
 
@@ -303,7 +343,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys+qv)
            nr = nr/(1.0_kind_phys+qv)
-           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp)) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware .or. gocart_aerosol_aware)) then
               nc = nc/(1.0_kind_phys+qv)
               nwfa = nwfa/(1.0_kind_phys+qv)
               nifa = nifa/(1.0_kind_phys+qv)
@@ -325,7 +365,8 @@ module mp_thompson
                               con_eps, convert_dry_rho,            &
                               spechum, qc, qr, qi, qs, qg, ni, nr, &
                               is_aerosol_aware,                    &
-                              merra2_aerosol_aware, nc, nwfa, nifa,&
+                              merra2_aerosol_aware,                &
+                              gocart_aerosol_aware, nc, nwfa, nifa,&
                               nwfa2d, nifa2d, aero_ind_fdb,        &
                               tgrs, prsl, phii, omega,             &
                               sedi_semi, decfl, islmsk, dtp,       &
@@ -370,6 +411,7 @@ module mp_thompson
          ! Aerosols
          logical,                   intent(in)    :: is_aerosol_aware, fullradar_diag 
          logical,                   intent(in)    :: merra2_aerosol_aware
+         logical,                   intent(in)    :: gocart_aerosol_aware
          real(kind_phys), optional, intent(inout) :: nc(:,:)
          real(kind_phys), optional, intent(inout) :: nwfa(:,:)
          real(kind_phys), optional, intent(inout) :: nifa(:,:)
@@ -432,6 +474,9 @@ module mp_thompson
 
          ! Local variables
          real(kind_phys) :: aero3d(1:ncol,1:nlev,1:num_aero)
+         real(kind_phys) :: aeroFF(1:ncol,1:nlev,1:num_aero)
+         real(kind_phys) :: gtnifa(1:ncol,1:nlev)
+         real(kind_phys) :: gtnwfa(1:ncol,1:nlev)
          real(kind_phys) :: aero3d_before(1:ncol,1:nlev,1:num_aero)
 
          ! Reduced time step if subcycling is used
@@ -543,6 +588,14 @@ module mp_thompson
                                          ' following optional arguments: nc, nwfa, nifa'
               errflg = 1
               return
+            else if (gocart_aerosol_aware .and. .not. (present(nc)     .and. &
+                                                       present(nwfa)   .and. &
+                                                       present(nifa)         )) then
+              write(errmsg,fmt='(*(a))') 'Logic error in mp_thompson_run:', &
+                                         ' gocart aerosol-aware microphysics require the', &
+                                         ' following optional arguments: nc, nwfa, nifa'
+              errflg = 1
+              return
             end if
             ! Consistency cheecks - subcycling and inner loop at the same time are not supported
             if (nsteps>1 .and. dt_inner < dtp) then
@@ -577,9 +630,13 @@ module mp_thompson
          end if
 
          if (cplchp) then
-           call get_aero(aero3d,gq0,  ncol, nlev, &
+           call get_aero(aero3d,aeroFF,gq0, gtnifa, gtnwfa, ncol, nlev, &
                  ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
                  ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
+          if (gocart_aerosol_aware) then
+              nifa(:,:)=gtnifa(:,:)
+              nwfa(:,:)=gtnwfa(:,:)
+          endif    
           aero3d_before (:,:,:)=aero3d(:,:,:)
          end if
          !> - Convert specific humidity to water vapor mixing ratio.
@@ -600,7 +657,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys-spechum)
            nr = nr/(1.0_kind_phys-spechum)
-           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp)) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware .or. gocart_aerosol_aware ) ) then
               nc = nc/(1.0_kind_phys-spechum)
               nwfa = nwfa/(1.0_kind_phys-spechum)
               nifa = nifa/(1.0_kind_phys-spechum)
@@ -708,7 +765,7 @@ module mp_thompson
             qcten3     => diag3d(:,:,37:37)
          end if set_extended_diagnostic_pointers
          !> - Call mp_gt_driver() with or without aerosols, with or without effective radii, ...
-         if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp) ) then
+         if (((is_aerosol_aware .or. merra2_aerosol_aware)).and. (.not. cplchp)) then
             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
                               nc=nc, nwfa=nwfa, nifa=nifa, nwfa2d=nwfa2d, nifa2d=nifa2d,     &
                               tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
@@ -750,10 +807,54 @@ module mp_thompson
                               qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
                               qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
-         else
-            if (cplchp) then
+         else if ((cplchp .and. (is_aerosol_aware .or. merra2_aerosol_aware .or.             &
+                                  gocart_aerosol_aware))) then
+                  call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,  &
+                              aero3d=aero3d, aeroFF=aeroFF,                                  &
+                              nc=nc, nwfa=nwfa, nifa=nifa, nwfa2d=nwfa2d, nifa2d=nifa2d,     &
+                              tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
+                              sedi_semi=sedi_semi, decfl=decfl, lsm=islmsk,                  &
+                              rainnc=rain_mp, rainncv=delta_rain_mp,                         &
+                              snownc=snow_mp, snowncv=delta_snow_mp,                         &
+                              icenc=ice_mp, icencv=delta_ice_mp,                             &
+                              graupelnc=graupel_mp, graupelncv=delta_graupel_mp, sr=sr,      &
+                              refl_10cm=refl_10cm,                                           &
+                              diagflag=diagflag, do_radar_ref=do_radar_ref_mp,               &
+                              max_hail_diam_sfc=max_hail_diam_sfc,                           &
+                              has_reqc=has_reqc, has_reqi=has_reqi, has_reqs=has_reqs,       &
+                              aero_ind_fdb=aero_ind_fdb, rand_perturb_on=spp_mp_opt,         &
+                              kme_stoch=kme_stoch,                                           &
+                              rand_pert=spp_wts_mp, spp_var_list=spp_var_list,               &
+                              spp_prt_list=spp_prt_list, n_var_spp=n_var_spp,                &
+                              spp_stddev_cutoff=spp_stddev_cutoff,                           &
+                              ids=ids, ide=ide, jds=jds, jde=jde, kds=kds, kde=kde,          &
+                              ims=ims, ime=ime, jms=jms, jme=jme, kms=kms, kme=kme,          &
+                              its=its, ite=ite, jts=jts, jte=jte, kts=kts, kte=kte,          &
+                              fullradar_diag=fullradar_diag, istep=istep, nsteps=nsteps,     &
+                              first_time_step=first_time_step, errmsg=errmsg, errflg=errflg, &
+                              ! Extended diagnostics
+                              ext_diag=ext_diag,                                             &
+                              ! vts1=vts1, txri=txri, txrc=txrc,                             &
+                              prw_vcdc=prw_vcdc,                                             &
+                              prw_vcde=prw_vcde, tpri_inu=tpri_inu, tpri_ide_d=tpri_ide_d,   &
+                              tpri_ide_s=tpri_ide_s, tprs_ide=tprs_ide,                      &
+                              tprs_sde_d=tprs_sde_d,                                         &
+                              tprs_sde_s=tprs_sde_s, tprg_gde_d=tprg_gde_d,                  &
+                              tprg_gde_s=tprg_gde_s, tpri_iha=tpri_iha,                      &
+                              tpri_wfz=tpri_wfz, tpri_rfz=tpri_rfz, tprg_rfz=tprg_rfz,       &
+                              tprs_scw=tprs_scw, tprg_scw=tprg_scw, tprg_rcs=tprg_rcs,       &
+                              tprs_rcs=tprs_rcs,                                             &
+                              tprr_rci=tprr_rci, tprg_rcg=tprg_rcg, tprw_vcd_c=tprw_vcd_c,   &
+                              tprw_vcd_e=tprw_vcd_e, tprr_sml=tprr_sml, tprr_gml=tprr_gml,   &
+                              tprr_rcg=tprr_rcg, tprr_rcs=tprr_rcs,                          &
+                              tprv_rev=tprv_rev, tten3=tten3,                                &
+                              qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
+                              qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
+                              qcten3=qcten3, pfils=pfils, pflls=pflls)
+         else if (cplchp .and. ((.not. is_aerosol_aware) .and. (.not. merra2_aerosol_aware)  &
+                             .and.(.not. gocart_aerosol_aware)) ) then
             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
-                              aero3d=aero3d,                                                 &   
+                              aero3d=aero3d, aeroFF=aeroFF,                                  &   
                               tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
                               sedi_semi=sedi_semi, decfl=decfl, lsm=islmsk,                  &
                               rainnc=rain_mp, rainncv=delta_rain_mp,                         &
@@ -832,7 +933,6 @@ module mp_thompson
                               qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
                               qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
-             end if
          end if
 
          if (cplchp) then
@@ -859,7 +959,7 @@ module mp_thompson
 
            ni = ni/(1.0_kind_phys+qv)
            nr = nr/(1.0_kind_phys+qv)
-           if ((is_aerosol_aware .or. merra2_aerosol_aware) .and. (.not. cplchp) ) then
+           if ((is_aerosol_aware .or. merra2_aerosol_aware .or. gocart_aerosol_aware)) then
               nc = nc/(1.0_kind_phys+qv)
               nwfa = nwfa/(1.0_kind_phys+qv)
               nifa = nifa/(1.0_kind_phys+qv)
@@ -1001,7 +1101,27 @@ module mp_thompson
       end subroutine get_niwfa
 
 !lzhang
-      subroutine get_aero(aero3d,aerfld, ncol, nlev,&
+
+      subroutine get_aero_int(aerfld, nifa, nwfa, ncol, nlev, &
+                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
+
+         implicit none
+         integer, intent(in)::ncol, nlev
+         real (kind=kind_phys), dimension(:,:,:), intent(in)  :: aerfld
+         real (kind=kind_phys), dimension(:,:),   intent(out ):: nifa, nwfa
+         integer, intent(in) :: ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,ntss3,  &
+                             ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
+
+         nifa(:,:)=(aerfld(:,:,ntdu1)/4.0737762+aerfld(:,:,ntdu2)/30.459203+aerfld(:,:,ntdu3)/153.45048+ &
+              aerfld(:,:,ntdu4)/1011.5142+ aerfld(:,:,ntdu5)/5683.3501)*1.e6
+
+         nwfa(:,:)=((aerfld(:,:,ntss1)/0.0045435214+aerfld(:,:,ntss2)/0.2907854+aerfld(:,:,ntss3)/12.91224+ &
+              aerfld(:,:,ntss4)/206.2216+ aerfld(:,:,ntss5)/4326.23)*9.+aerfld(:,:,ntsu)/0.3053104*5+ &
+              aerfld(:,:,ntocl)/0.3232698*8)*1.e6
+      end subroutine get_aero_int
+
+      subroutine get_aero(aero3d,aeroFF, aerfld, nifa, nwfa, ncol, nlev,&
                  ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
                  ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
          ! To calculate nifa and nwfa from bins of aerosols.
@@ -1044,24 +1164,22 @@ module mp_thompson
          integer, intent(in)::ncol, nlev
          real (kind=kind_phys), dimension(:,:,:), intent(in)  :: aerfld
          real (kind=kind_phys), dimension(ncol, nlev,num_aero), intent(out)  :: aero3d
-         !real (kind=kind_phys), dimension(:,:),   intent(out ):: nifa, nwfa
+         real (kind=kind_phys), dimension(ncol, nlev,num_aero), intent(out)  :: aeroFF
+         real (kind=kind_phys), dimension(:,:),   intent(out ):: nifa, nwfa
          integer, intent(in) :: ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,ntss3,  &
                              ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
-         integer i,k
+         integer i,k, nt
 
 
          do k=1,nlev
           do i=1,ncol
 
-         !nifa(i,k)=(aerfld(i,k,ntdu1)/4.0737762+aerfld(i,k,ntdu2)/30.459203+aerfld(i,k,ntdu3)/153.45048+
-         !&
-         !     aerfld(i,k,ntdu4)/1011.5142+ aerfld(i,k,ntdu5)/5683.3501)*1.e6
+         nifa(i,k)=(aerfld(i,k,ntdu1)/4.0737762+aerfld(i,k,ntdu2)/30.459203+aerfld(i,k,ntdu3)/153.45048+ &
+              aerfld(i,k,ntdu4)/1011.5142+ aerfld(i,k,ntdu5)/5683.3501)*1.e6
 
-         !nwfa(i,k)=((aerfld(i,k,ntss1)/0.0045435214+aerfld(i,k,ntss2)/0.2907854+aerfld(i,k,ntss3)/12.91224+
-         !&
-         !     aerfld(i,k,ntss4)/206.2216+
-         !     aerfld(i,k,ntss5)/4326.23)*9.+aerfld(i,k,ntsu)/0.3053104*5+ &
-         !     aerfld(i,k,ntocl)/0.3232698*8)*1.e6
+         nwfa(i,k)=((aerfld(i,k,ntss1)/0.0045435214+aerfld(i,k,ntss2)/0.2907854+aerfld(i,k,ntss3)/12.91224+ &
+              aerfld(i,k,ntss4)/206.2216+aerfld(i,k,ntss5)/4326.23)*9.+aerfld(i,k,ntsu)/0.3053104*5+ &
+              aerfld(i,k,ntocl)/0.3232698*8)*1.e6
 
          aero3d(i,k,1)=aerfld(i,k,ntdu1)/4.0737762*1.e6
          aero3d(i,k,2)=aerfld(i,k,ntdu2)/30.459203*1.e6
@@ -1078,9 +1196,20 @@ module mp_thompson
          aero3d(i,k,13)=aerfld(i,k,ntbcl)/0.3232698*8*1.e6
          aero3d(i,k,14)=aerfld(i,k,ntocb)/0.3232698*8*1.e6
          aero3d(i,k,15)=aerfld(i,k,ntocl)/0.3232698*8*1.e6
+         
+            do nt =1, 15 
+            if (aero3d(i,k,nt) >=1.e-15) then
+            aeroFF(i,k,nt)=nifa(i,k)/aero3d(i,k,nt)
+            else
+            aero3d(i,k,nt) =100.
+            endif
+            enddo
+         aeroFF(i,k,12)=100.
+         aeroFF(i,k,13)=100.
+         aeroFF(i,k,14)=100.
           enddo
          enddo
-
+          aeroFF=100.  ! lzhang, removal factor
       end subroutine get_aero
 
       subroutine update_aero(aero3d,aerfld,ncol, nlev,           &

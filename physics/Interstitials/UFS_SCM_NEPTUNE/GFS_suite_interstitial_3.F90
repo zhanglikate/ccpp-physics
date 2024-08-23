@@ -16,7 +16,7 @@
                satmedmf, trans_trac, do_shoc, ltaerosol, ntrac, ntcw,   &
                ntiw, ntclamt, ntrw, ntsw, ntrnc, ntsnc, ntgl, ntgnc,    &
                xlon, xlat, gt0, gq0, sigmain,sigmaout,qmicro,           &
-               imp_physics, imp_physics_mg,                             &
+               imp_physics, imp_physics_mg,gtaerosol,                   &
                imp_physics_zhao_carr, imp_physics_zhao_carr_pdf,        &
                imp_physics_gfdl, imp_physics_thompson, dtidx, ntlnc,    &
                imp_physics_wsm6, imp_physics_fer_hires, prsi, ntinc,    &
@@ -37,7 +37,7 @@
         imp_physics_gfdl, imp_physics_thompson, imp_physics_wsm6,imp_physics_fer_hires,  &
         imp_physics_nssl, me, index_of_process_conv_trans
       integer,              intent(in   ), dimension(:)     :: islmsk, kpbl, kinver
-      logical,              intent(in   )                   :: cscnv, satmedmf, trans_trac, do_shoc, ltaerosol, ras, progsigma
+      logical,              intent(in   )                   :: cscnv, satmedmf, trans_trac, do_shoc, ltaerosol, gtaerosol, ras, progsigma
       logical,              intent(in   )                   :: first_time_step, restart
       integer,              intent(in   )                   :: imfshalcnv, imfdeepcnv, imfshalcnv_samf,imfdeepcnv_samf
       integer,              intent(in   )                   :: imfshalcnv_c3,imfdeepcnv_c3
@@ -195,7 +195,7 @@
             save_tcp(i,k) = gt0(i,k)
           enddo
         enddo
-        if(ltaerosol) then
+        if(ltaerosol .or. gtaerosol) then
           save_qi(:,:) = clw(:,:,1)
           save_qc(:,:) = clw(:,:,2)
         else

@@ -134,6 +134,13 @@
   dimensions = ()
   type = logical
   intent = in
+[gtaerosol]
+  standard_name = do_gocart_aerosol_awareness
+  long_name = flag for gocart aerosol-aware physics for example the thompson microphysics
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
 [ntrac]
   standard_name = number_of_tracers
   long_name = number of tracers

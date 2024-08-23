@@ -15,7 +15,7 @@
         ntccn, nthl, nthnc, ntgv, nthv, ntrz, ntgz, nthz,                                &
         imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_wsm6,           &
         imp_physics_zhao_carr, imp_physics_mg, imp_physics_fer_hires, imp_physics_nssl,  &
-        ltaerosol, cplchp, mraerosol, nssl_ccn_on, nssl_hail_on, nssl_3moment,           &
+        ltaerosol, cplchp, mraerosol, gtaerosol, nssl_ccn_on, nssl_hail_on, nssl_3moment,&
         hybedmf, do_shoc, satmedmf, qgrs, vdftra, save_u, save_v, save_t, save_q,        &
         flag_for_pbl_generic_tend, ldiag3d, qdiag3d, lssav, ugrs, vgrs, tgrs, errmsg, errflg)
         
@@ -33,7 +33,7 @@
       logical, intent(in) :: trans_aero, ldiag3d, qdiag3d, lssav
       integer, intent(in) :: imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_wsm6
       integer, intent(in) :: imp_physics_zhao_carr, imp_physics_mg, imp_physics_fer_hires
-      logical, intent(in) :: ltaerosol, hybedmf, do_shoc, satmedmf, flag_for_pbl_generic_tend, mraerosol
+      logical, intent(in) :: ltaerosol, hybedmf, do_shoc, satmedmf, flag_for_pbl_generic_tend, mraerosol, gtaerosol
       integer, intent(in) :: imp_physics_nssl
       logical, intent(in) :: nssl_hail_on, nssl_ccn_on, nssl_3moment
       logical, intent(in) :: cplchp
@@ -108,7 +108,7 @@
               enddo
             enddo
             rtg_ozone_index = 10
-          elseif(mraerosol) then
+          elseif(mraerosol .or. gtaerosol) then
             do k=1,levs
               do i=1,im
                 vdftra(i,k,1)  = qgrs(i,k,ntqv)
@@ -273,7 +273,8 @@
 !
         if (trans_aero) then
           call set_aerosol_tracer_index(imp_physics, imp_physics_wsm6,          &
-                                        imp_physics_thompson, ltaerosol,mraerosol, &
+                                        imp_physics_thompson, ltaerosol,        &
+                                        mraerosol, gtaerosol,                   &
                                         imp_physics_mg, ntgl, imp_physics_gfdl, &
                                         imp_physics_zhao_carr, imp_physics_nssl,&
                                         nssl_hail_on, nssl_ccn_on, kk,          &
