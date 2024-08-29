@@ -1197,9 +1197,16 @@ module mp_thompson
          aero3d(i,k,14)=aerfld(i,k,ntocb)/0.3232698*8*1.e6
          aero3d(i,k,15)=aerfld(i,k,ntocl)/0.3232698*8*1.e6
          
-            do nt =1, 15 
+            do nt =1, 5 
             if (aero3d(i,k,nt) >=1.e-15) then
             aeroFF(i,k,nt)=nifa(i,k)/aero3d(i,k,nt)
+            else
+            aero3d(i,k,nt) =100.
+            endif
+            enddo
+            do nt =6, 15
+            if (aero3d(i,k,nt) >=1.e-15) then
+            aeroFF(i,k,nt)=nwfa(i,k)/aero3d(i,k,nt)
             else
             aero3d(i,k,nt) =100.
             endif
