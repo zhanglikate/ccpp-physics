@@ -1201,14 +1201,14 @@ module mp_thompson
             if (aero3d(i,k,nt) >=1.e-15) then
             aeroFF(i,k,nt)=nifa(i,k)/aero3d(i,k,nt)
             else
-            aero3d(i,k,nt) =100.
+            aeroFF(i,k,nt) =100.
             endif
             enddo
             do nt =6, 15
             if (aero3d(i,k,nt) >=1.e-15) then
             aeroFF(i,k,nt)=nwfa(i,k)/aero3d(i,k,nt)
             else
-            aero3d(i,k,nt) =100.
+            aeroFF(i,k,nt) =100.
             endif
             enddo
          aeroFF(i,k,12)=100.
