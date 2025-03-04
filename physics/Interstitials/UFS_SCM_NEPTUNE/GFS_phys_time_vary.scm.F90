@@ -60,7 +60,7 @@
 !>\section gen_GFS_phys_time_vary_init GFS_phys_time_vary_init General Algorithm
 !! @{
       subroutine GFS_phys_time_vary_init (                                                         &
-              me, master, ntoz, h2o_phys, iaerclm, iccn, iflip, im, nx, ny, idate, xlat_d, xlon_d, &
+              me, master, ntoz, h2o_phys, iaerclm, mraerosol, iccn, iflip, im, nx, ny, idate, xlat_d, xlon_d, &
               jindx1_o3, jindx2_o3, ddy_o3, ozphys, jindx1_h, jindx2_h, ddy_h, h2opl,fhour,        &
               jindx1_aer, jindx2_aer, ddy_aer, iindx1_aer, iindx2_aer, ddx_aer, aer_nm,            &
               jindx1_ci, jindx2_ci, ddy_ci, iindx1_ci, iindx2_ci, ddx_ci, imap, jmap,              &
@@ -79,7 +79,7 @@
 
          ! Interface variables
          integer,              intent(in)    :: me, master, ntoz, iccn, iflip, im, nx, ny
-         logical,              intent(in)    :: h2o_phys, iaerclm, lsm_cold_start
+         logical,              intent(in)    :: h2o_phys, iaerclm,mraerosol, lsm_cold_start
          integer,              intent(in)    :: idate(:)
          real(kind_phys),      intent(in)    :: fhour
          real(kind_phys),      intent(in)    :: xlat_d(:), xlon_d(:)
@@ -209,7 +209,7 @@
          end if
 
 !> - Call read_aerdata() to read aerosol climatology
-         if (iaerclm) then
+         if (iaerclm .or. mraerosol ) then
             ! Consistency check that the value for ntrcaerm set in GFS_typedefs.F90
             ! and used to allocate aer_nm matches the value defined in aerclm_def
             if (size(aer_nm, dim=3).ne.ntrcaerm) then
@@ -258,7 +258,7 @@
          endif
 
 !> - Call setindxaer() to initialize aerosols data
-         if (iaerclm) then
+         if (iaerclm .or. mraerosol) then
            call setindxaer (im, xlat_d, jindx1_aer,          &
                             jindx2_aer, ddy_aer, xlon_d,     &
                             iindx1_aer, iindx2_aer, ddx_aer, &
@@ -322,7 +322,7 @@
          
          if (errflg/=0) return
 
-         if (iaerclm) then
+         if (iaerclm .or. mraerosol) then
            call read_aerdataf (me, master, iflip, idate, fhour, errmsg, errflg)
            if (errflg/=0) return
          end if
@@ -633,7 +633,7 @@
 !! @{
       subroutine GFS_phys_time_vary_timestep_init (                                                 &
             me, master, cnx, cny, isc, jsc, nrcm, im, levs, kdt, idate, nsswr, fhswr, lsswr, fhour, &
-            imfdeepcnv, cal_pre, random_clds, ozphys, ntoz, h2o_phys, iaerclm, iccn, clstp,         &
+            imfdeepcnv, cal_pre, random_clds, ozphys, ntoz, h2o_phys, iaerclm, mraerosol, iccn, clstp, &
             jindx1_o3, jindx2_o3, ddy_o3, ozpl, jindx1_h, jindx2_h, ddy_h, h2opl, iflip,            &
             jindx1_aer, jindx2_aer, ddy_aer, iindx1_aer, iindx2_aer, ddx_aer, aer_nm,               &
             jindx1_ci, jindx2_ci, ddy_ci, iindx1_ci, iindx2_ci, ddx_ci, in_nm, ccn_nm,              &
@@ -647,7 +647,7 @@
                                                 nsswr, imfdeepcnv, iccn, ntoz, iflip
          integer,              intent(in)    :: idate(:)
          real(kind_phys),      intent(in)    :: fhswr, fhour
-         logical,              intent(in)    :: lsswr, cal_pre, random_clds, h2o_phys, iaerclm
+         logical,              intent(in)    :: lsswr, cal_pre, random_clds, h2o_phys, iaerclm, mraerosol
          real(kind_phys),      intent(out)   :: clstp
          integer,              intent(in)    :: jindx1_o3(:), jindx2_o3(:), jindx1_h(:), jindx2_h(:)
          real(kind_phys),      intent(in)    :: ddy_o3(:),  ddy_h(:)
@@ -794,7 +794,7 @@
          endif
          
 !> - Call aerinterpol() to make aerosol interpolation
-         if (iaerclm) then
+         if (iaerclm .or. mraerosol) then
            ! aerinterpol is using threading inside, don't
            ! move into OpenMP parallel section above
            call aerinterpol (me, master, nthrds, im, idate, &

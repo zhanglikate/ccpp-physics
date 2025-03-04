@@ -308,6 +308,13 @@
   dimensions = ()
   type = logical
   intent = in
+[gtaerosol]
+  standard_name = do_gocart_aerosol_awareness
+  long_name = flag for gocart aerosol-aware physics for example the thompson microphysics
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
 [nssl_ccn_on]
   standard_name = nssl_ccn_on
   long_name = CCN activation flag in NSSL micro

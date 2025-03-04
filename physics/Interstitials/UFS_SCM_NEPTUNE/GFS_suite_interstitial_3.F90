@@ -195,7 +195,7 @@
             save_tcp(i,k) = gt0(i,k)
           enddo
         enddo
-        if(ltaerosol) then
+        if(ltaerosol ) then
           save_qi(:,:) = clw(:,:,1)
           save_qc(:,:) = clw(:,:,2)
         else

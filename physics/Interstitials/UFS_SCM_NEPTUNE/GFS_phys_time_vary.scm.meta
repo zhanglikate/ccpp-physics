@@ -51,6 +51,13 @@
   dimensions = ()
   type = logical
   intent = in
+[mraerosol]
+  standard_name = do_merra2_aerosol_awareness
+  long_name = flag for merra2 aerosol-aware physics for example the thompson microphysics
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
 [iccn]
   standard_name = control_for_ice_cloud_condensation_nuclei_forcing
   long_name = flag for IN and CCN forcing for morrison gettelman microphysics
@@ -1072,6 +1079,13 @@
 [iaerclm]
   standard_name = flag_for_aerosol_input_MG_radiation
   long_name = flag for using aerosols in Morrison-Gettelman MP_radiation
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[mraerosol]
+  standard_name = do_merra2_aerosol_awareness
+  long_name = flag for merra2 aerosol-aware physics for example the thompson microphysics
   units = flag
   dimensions = ()
   type = logical

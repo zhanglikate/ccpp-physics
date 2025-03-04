@@ -12,7 +12,7 @@
         ntqv, ntcw, ntiw, ntrw, ntsw, ntlnc, ntinc, ntrnc, ntsnc, ntgnc, ntwa, ntia, ntgl, ntoz, ntke, ntkev,nqrimef,          &
         trans_aero, ntchs, ntchm, ntccn, nthl, nthnc, ntgv, nthv, ntrz, ntgz, nthz,                                            &
         imp_physics, imp_physics_gfdl, imp_physics_thompson, imp_physics_wsm6, imp_physics_zhao_carr, imp_physics_mg,          &
-        imp_physics_fer_hires, imp_physics_nssl, nssl_ccn_on, ltaerosol, mraerosol, nssl_hail_on, nssl_3moment,                &
+        imp_physics_fer_hires, imp_physics_nssl, nssl_ccn_on, ltaerosol, mraerosol, gtaerosol, nssl_hail_on, nssl_3moment,     &
         cplflx, cplaqm, cplchm,cplchp, lssav, flag_for_pbl_generic_tend, ldiag3d, lsidea, hybedmf, do_shoc, satmedmf,          &
         shinhong, do_ysu, dvdftra, dusfc1, dvsfc1, dtsfc1, dqsfc1, dtf, dudt, dvdt, dtdt, htrsw, htrlw, xmu,                   &
         dqdt, dusfc_cpl, dvsfc_cpl, dtsfc_cpl, dtend, dtidx, index_of_temperature, index_of_x_wind, index_of_y_wind,           &
@@ -36,7 +36,7 @@
       integer, intent(in) :: imp_physics_zhao_carr, imp_physics_mg, imp_physics_fer_hires
       integer, intent(in) :: imp_physics_nssl
       logical, intent(in) :: nssl_ccn_on, nssl_hail_on, nssl_3moment
-      logical, intent(in) :: ltaerosol, cplflx, cplaqm, cplchm,cplchp, lssav, ldiag3d, lsidea, use_med_flux, mraerosol
+      logical, intent(in) :: ltaerosol, cplflx, cplaqm, cplchm,cplchp, lssav, ldiag3d, lsidea, use_med_flux, mraerosol, gtaerosol
       logical, intent(in) :: hybedmf, do_shoc, satmedmf, shinhong, do_ysu
 
       logical, intent(in) :: flag_for_pbl_generic_tend      
@@ -105,7 +105,8 @@
         if (trans_aero) then
           ! Set kk if chemistry-aerosol tracers are diffused
           call set_aerosol_tracer_index(imp_physics, imp_physics_wsm6,          &
-                                        imp_physics_thompson, ltaerosol,mraerosol,   &
+                                        imp_physics_thompson, ltaerosol,        &
+                                        mraerosol, gtaerosol,                   &
                                         imp_physics_mg, ntgl, imp_physics_gfdl, &
                                         imp_physics_zhao_carr, imp_physics_nssl,&
                                         nssl_hail_on, nssl_ccn_on, kk,          &
@@ -166,7 +167,7 @@
                 dqdt(i,k,ntia)  = dvdftra(i,k,12)
               enddo
             enddo
-          else if(mraerosol) then
+          else if(mraerosol .or. gtaerosol) then
             do k=1,levs
               do i=1,im
                 dqdt(i,k,ntqv)  = dvdftra(i,k,1)

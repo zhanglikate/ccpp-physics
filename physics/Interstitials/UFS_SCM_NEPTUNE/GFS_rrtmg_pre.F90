@@ -31,7 +31,7 @@
         imp_physics_fer_hires, iovr, iovr_rand, iovr_maxrand, iovr_max,        &
         iovr_dcorr, iovr_exp, iovr_exprand, idcor, idcor_con, idcor_hogan,     &
         idcor_oreopoulos, dcorr_con, julian, yearlen, lndp_var_list, lsswr,    &
-        lslwr, ltaerosol, mraerosol, lgfdlmprad, uni_cld, effr_in, do_mynnedmf,&
+        lslwr, ltaerosol, mraerosol, gtaerosol, lgfdlmprad, uni_cld, effr_in, do_mynnedmf,&
         lmfshal, lcnorm, lmfdeep2, lcrick, fhswr, fhlwr, solhr, sup, con_eps,  &
         epsm1, fvirt, rog, rocp, con_rd, xlat_d, xlat, xlon, coslat, sinlat,   &
         tsfc, slmsk, prsi, prsl, prslk, tgrs, sfc_wts, mg_cld, effrr_in,       &
@@ -128,7 +128,7 @@
       logical,              intent(in) :: lsswr, lslwr, ltaerosol, lgfdlmprad, &
                                           uni_cld, effr_in, do_mynnedmf,       &
                                           lmfshal, lmfdeep2, pert_clds, lcrick,&
-                                          lcnorm, top_at_1, lextop, mraerosol
+                                          lcnorm, top_at_1, lextop, mraerosol, gtaerosol
       logical,              intent(in) :: rrfs_sd, aero_dir_fdb, xr_cnvcld
 
       logical,              intent(in) :: nssl_ccn_on, nssl_invertccn
@@ -375,6 +375,7 @@
           tracer1(:,k1,j) = max(0.0, qgrs(:,k2,j))
         enddo
       enddo
+
 !
       if (top_at_1) then                                ! input data from toa to sfc
         if (lsk > 0) then
@@ -736,7 +737,7 @@
             enddo
           enddo
           ! for Thompson MP - prepare variables for calc_effr
-          if_thompson: if (imp_physics == imp_physics_thompson .and. (ltaerosol .or. mraerosol)) then
+          if_thompson: if (imp_physics == imp_physics_thompson .and. (ltaerosol .or. mraerosol .or. gtaerosol)) then
             do k=1,LMK
               do i=1,IM
                 qvs = qlyr(i,k)
@@ -748,7 +749,13 @@
                 qs_mp (i,k) = tracer1(i,k,ntsw)/(1.-qvs)
                 nc_mp (i,k) = tracer1(i,k,ntlnc)/(1.-qvs)
                 ni_mp (i,k) = tracer1(i,k,ntinc)/(1.-qvs)
+               if (gtaerosol.or.mraerosol) then
+                nwfa (i,k) = max(1.e-15,((tracer1(i,k,ntss1)/0.0045435214+tracer1(i,k,ntss2)/0.2907854+tracer1(i,k,ntss3)/12.91224+ &
+              tracer1(i,k,ntss4)/206.2216+tracer1(i,k,ntss5)/4326.23)*9.+tracer1(i,k,ntsu)/0.3053104*5+ &
+              tracer1(i,k,ntocl)/0.3232698*8)*1.e6)
+                else        
                 nwfa  (i,k) = tracer1(i,k,ntwa)
+               endif
               enddo
             enddo
           elseif (imp_physics == imp_physics_thompson) then
@@ -884,7 +891,7 @@
           ! Update number concentration, consistent with sub-grid clouds (GF, MYNN) or without (all others)
           do k=1,lm
             do i=1,im
-              if ((ltaerosol .or. mraerosol) .and. qc_mp(i,k)>1.e-12 .and. nc_mp(i,k)<100.) then
+              if ((ltaerosol .or. mraerosol .or. gtaerosol) .and. qc_mp(i,k)>1.e-12 .and. nc_mp(i,k)<100.) then
                 nc_mp(i,k) = make_DropletNumber(qc_mp(i,k)*rho(i,k), nwfa(i,k)*rho(i,k)) * orho(i,k)
               endif
               if (qi_mp(i,k)>1.e-12 .and. ni_mp(i,k)<100.) then
