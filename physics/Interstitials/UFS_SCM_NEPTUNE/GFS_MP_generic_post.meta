@@ -128,6 +128,13 @@
   dimensions = ()
   type = logical
   intent = in
+[cplchp]
+  standard_name = flag_for_chemistry_package_coupling
+  long_name = flag controlling cplchp collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
 [cpllnd]
   standard_name = flag_for_land_coupling
   long_name = flag controlling cpllnd collection (default off)
@@ -623,6 +630,15 @@
   type = real
   kind = kind_phys
   intent = inout
+[rain_cplchp]
+  standard_name = lwe_thickness_of_precipitation_amount_for_chemcoupling
+  long_name = total rain precipitation chem package
+  units = m
+  dimensions = (horizontal_loop_extent)
+  type = real
+  kind = kind_phys
+  intent = inout
+  active = ( flag_for_chemistry_coupling .or. flag_for_chemistry_package_coupling )
 [rainc_cpl]
   standard_name = cumulative_lwe_thickness_of_convective_precipitation_amount_for_coupling
   long_name = total convective precipitation

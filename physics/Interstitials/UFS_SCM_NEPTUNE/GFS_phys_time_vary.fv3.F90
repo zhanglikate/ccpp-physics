@@ -82,10 +82,10 @@
 !>\section gen_GFS_phys_time_vary_init GFS_phys_time_vary_init General Algorithm
 !> @{
       subroutine GFS_phys_time_vary_init (                                                         &
-              me, master, ntoz, h2o_phys, iaerclm, iccn, iaermdl, iflip, im, levs,                 &
+              me, master, ntoz, h2o_phys, iaerclm, mraerosol, iccn, iaermdl, iflip, im, levs,      &
               nx, ny, idate, xlat_d, xlon_d,                                                       &
               jindx1_o3, jindx2_o3, ddy_o3, jindx1_h, jindx2_h, ddy_h, h2opl,fhour,                &
-              jindx1_aer, jindx2_aer, ddy_aer, iindx1_aer, iindx2_aer, ddx_aer, aer_nm,            &
+              jindx1_aer, jindx2_aer, ddy_aer, iindx1_aer, iindx2_aer, ddx_aer, aer_nm, aer_mr,    &
               jindx1_ci, jindx2_ci, ddy_ci, iindx1_ci, iindx2_ci, ddx_ci, imap, jmap,              &
               do_ugwp_v1, jindx1_tau, jindx2_tau, ddy_j1tau, ddy_j2tau,                            &
               isot, ivegsrc, nlunit, sncovr, sncovr_ice, lsm, lsm_noahmp, lsm_ruc, min_seaice,     &
@@ -103,7 +103,7 @@
 
          ! Interface variables
          integer,              intent(in)    :: me, master, ntoz, iccn, iflip, im, nx, ny, levs, iaermdl
-         logical,              intent(in)    :: h2o_phys, iaerclm, lsm_cold_start
+         logical,              intent(in)    :: h2o_phys, iaerclm, mraerosol, lsm_cold_start
          integer,              intent(in)    :: idate(:), iopt_lake, iopt_lake_clm, iopt_lake_flake
          real(kind_phys),      intent(in)    :: fhour, lakefrac_threshold, lakedepth_threshold
          real(kind_phys),      intent(in)    :: xlat_d(:), xlon_d(:)
@@ -119,6 +119,7 @@
          integer,              intent(inout) :: jindx1_aer(:), jindx2_aer(:), iindx1_aer(:), iindx2_aer(:)
          real(kind_phys),      intent(inout) :: ddy_aer(:), ddx_aer(:)
          real(kind_phys),      intent(out)   :: aer_nm(:,:,:)
+         real(kind_phys),      intent(out)   :: aer_mr(:,:,:)
          integer,              intent(inout) :: jindx1_ci(:), jindx2_ci(:), iindx1_ci(:), iindx2_ci(:)
          real(kind_phys),      intent(inout) :: ddy_ci(:), ddx_ci(:)
          integer,              intent(inout) :: imap(:), jmap(:)
@@ -247,22 +248,30 @@
 
 !> - Call read_aerdata() to read aerosol climatology, Anning added coupled
 !>  added coupled gocart and radiation option to initializing aer_nm
-         if (iaerclm) then
+         if (iaerclm .or.mraerosol ) then
            ntrcaer = ntrcaerm
            myerrflg = 0
            myerrmsg = 'read_aerdata failed without a message'
            call read_aerdata (me,master,iflip,idate,myerrmsg,myerrflg)
            call copy_error(myerrmsg, myerrflg, errmsg, errflg)
-         else if(iaermdl ==2 ) then
+         endif
+
+          if(iaermdl ==2 ) then
+
            do ix=1,ntrcaerm
              do j=1,levs
                do i=1,im
                  aer_nm(i,j,ix) = 1.e-20_kind_phys
+                 if (mraerosol) then
+                 aer_mr(i,j,ix) = 1.e-20_kind_phys
+                 endif
                end do
              end do
            end do
            ntrcaer = ntrcaerm
-         else
+           endif
+
+         if ((.not. iaerclm) .and. (iaermdl .ne.2))then
            ntrcaer = 1
          endif
 
@@ -373,7 +382,7 @@
 
          if (errflg/=0) return
 
-         if (iaerclm) then
+         if (iaerclm  ) then
            ! This call is outside the OpenMP section, so it should access errmsg & errflg directly.
            call read_aerdataf (me, master, iflip, idate, fhour, errmsg, errflg)
            ! If it is moved to an OpenMP section, it must use myerrmsg, myerrflg, and copy_error.
@@ -725,9 +734,9 @@
 !> @{
       subroutine GFS_phys_time_vary_timestep_init (                                                 &
             me, master, cnx, cny, isc, jsc, nrcm, im, levs, kdt, idate, nsswr, fhswr, lsswr, fhour, &
-            imfdeepcnv, cal_pre, random_clds, nscyc, ntoz, h2o_phys, iaerclm, iccn, clstp,          &
+            imfdeepcnv, cal_pre, random_clds, nscyc, ntoz, h2o_phys, iaerclm, mraerosol,iccn, clstp,&
             jindx1_o3, jindx2_o3, ddy_o3, ozpl, jindx1_h, jindx2_h, ddy_h, h2opl, iflip,            &
-            jindx1_aer, jindx2_aer, ddy_aer, iindx1_aer, iindx2_aer, ddx_aer, aer_nm,               &
+            jindx1_aer, jindx2_aer, ddy_aer, iindx1_aer, iindx2_aer, ddx_aer, aer_nm, aer_mr,       &
             jindx1_ci, jindx2_ci, ddy_ci, iindx1_ci, iindx2_ci, ddx_ci, in_nm, ccn_nm, fn_nml,      &
             imap, jmap, prsl, seed0, rann, nthrds, nx, ny, nsst, tile_num, nlunit, lsoil, lsoil_lsm,&
             kice, ialb, isot, ivegsrc, input_nml_file, use_ufo, nst_anl, frac_grid, fhcyc, phour,   &
@@ -744,7 +753,7 @@
                                                 nsswr, imfdeepcnv, iccn, nscyc, ntoz, iflip
          integer,              intent(in)    :: idate(:)
          real(kind_phys),      intent(in)    :: fhswr, fhour
-         logical,              intent(in)    :: lsswr, cal_pre, random_clds, h2o_phys, iaerclm
+         logical,              intent(in)    :: lsswr, cal_pre, random_clds, h2o_phys, iaerclm, mraerosol
          real(kind_phys),      intent(out)   :: clstp
          integer,              intent(in)    :: jindx1_o3(:), jindx2_o3(:), jindx1_h(:), jindx2_h(:)
          real(kind_phys),      intent(in)    :: ddy_o3(:),  ddy_h(:)
@@ -752,6 +761,7 @@
          integer,              intent(in)    :: jindx1_aer(:), jindx2_aer(:), iindx1_aer(:), iindx2_aer(:)
          real(kind_phys),      intent(in)    :: ddy_aer(:), ddx_aer(:)
          real(kind_phys),      intent(inout) :: aer_nm(:,:,:)
+         real(kind_phys),      intent(inout) :: aer_mr(:,:,:)
          integer,              intent(in)    :: jindx1_ci(:), jindx2_ci(:), iindx1_ci(:), iindx2_ci(:)
          real(kind_phys),      intent(in)    :: ddy_ci(:), ddx_ci(:)
          real(kind_phys),      intent(inout) :: in_nm(:,:), ccn_nm(:,:)
@@ -809,7 +819,7 @@
 !$OMP          shared(kdt,nsswr,lsswr,clstp,imfdeepcnv,cal_pre,random_clds)              &
 !$OMP          shared(fhswr,fhour,seed0,cnx,cny,nrcm,wrk,rannie,rndval)                  &
 !$OMP          shared(rann,im,isc,jsc,imap,jmap,ntoz,me,idate,jindx1_o3,jindx2_o3)       &
-!$OMP          shared(ozpl,ddy_o3,h2o_phys,jindx1_h,jindx2_h,h2opl,ddy_h,iaerclm,master) &
+!$OMP          shared(ozpl,ddy_o3,h2o_phys,jindx1_h,jindx2_h,h2opl,ddy_h,iaerclm,mraerosol, master) &
 !$OMP          shared(levs,prsl,iccn,jindx1_ci,jindx2_ci,ddy_ci,iindx1_ci,iindx2_ci)     &
 !$OMP          shared(ddx_ci,in_nm,ccn_nm,do_ugwp_v1,jindx1_tau,jindx2_tau,ddy_j1tau)    &
 !$OMP          shared(ddy_j2tau,tau_amf,iflip,ozphys,rjday,n1,n2,idat,jdat,rinc)         &
@@ -933,6 +943,9 @@
                              ddy_aer, iindx1_aer,           &
                              iindx2_aer, ddx_aer,           &
                              levs, prsl, aer_nm, errmsg, errflg)
+                     if ( mraerosol) then
+                     aer_mr=aer_nm
+                     endif
            if(errflg /= 0) then
              return
            endif

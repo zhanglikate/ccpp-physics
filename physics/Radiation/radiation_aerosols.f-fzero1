@@ -159,6 +159,7 @@
       integer, parameter, public :: NSPC1   = NSPC + 1
 
       real (kind=kind_phys), parameter :: f_zero = 0.0
+      real (kind=kind_phys), parameter :: f_zero1 = 1.e-20
       real (kind=kind_phys), parameter :: f_one  = 1.0
 
 !  ---  module control parameters set in subroutine "aer_init"
@@ -4430,12 +4431,12 @@
 ! --- initialize tauae, ssaae, asyae
         do m = 1, NSWLWBD
           do k = 1, NLAY
-           tauae(k,m) = f_zero
+           tauae(k,m) = f_zero1
            if (m==nv_aod) then
              tauae_550(k,1) = f_zero
            endif
            ssaae(k,m) = f_one
-           asyae(k,m) = f_zero
+           asyae(k,m) = f_zero1
           enddo
         enddo
 
@@ -4479,9 +4480,9 @@
 
           do m = 1, NBDSW
             do k = 1, NLAY
-              aerosw(i,k,m,1) = max (1.e-10,tauae(k,m))
+              aerosw(i,k,m,1) = tauae(k,m)
               aerosw(i,k,m,2) = ssaae(k,m)
-              aerosw(i,k,m,3) = max (1.e-10, asyae(k,m))
+              aerosw(i,k,m,3) = asyae(k,m)
             enddo
           enddo
 
@@ -4502,18 +4503,18 @@
             m1 = NSWBND + 1
             do m = 1, NBDLW
               do k = 1, NLAY
-                aerolw(i,k,m,1) = max (1.e-10, tauae(k,m1))
+                aerolw(i,k,m,1) = tauae(k,m1)
                 aerolw(i,k,m,2) = ssaae(k,m1)
-                aerolw(i,k,m,3) = max (1.e-10, asyae(k,m1))
+                aerolw(i,k,m,3) = asyae(k,m1)
               enddo
             enddo
           else
             do m = 1, NBDLW
               m1 = NSWBND + m
               do k = 1, NLAY
-                aerolw(i,k,m,1) = max (1.e-10, tauae(k,m1))
+                aerolw(i,k,m,1) = tauae(k,m1)
                 aerolw(i,k,m,2) = ssaae(k,m1)
-                aerolw(i,k,m,3) = max (1.e-10, asyae(k,m1))
+                aerolw(i,k,m,3) = asyae(k,m1)
               enddo
             enddo
           endif
@@ -4673,7 +4674,7 @@
            enddo        ! end_do_ntrc_loop
 
 ! --- determine total tau, ssa, asy for aerosol mixture
-           tauae(k,ib) = sum_tau
+           tauae(k,ib) = max (f_zero1,sum_tau)
            if ( ib==nv_aod ) then
              tauae_550(k,1) = sum_tau_550
            endif
