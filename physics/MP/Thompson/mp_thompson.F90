@@ -37,7 +37,7 @@ module mp_thompson
                                   imp_physics_thompson, convert_dry_rho,   &
                                   spechum, qc, qr, qi, qs, qg, ni, nr,     &
                                   is_aerosol_aware,  merra2_aerosol_aware, &
-                                  gocart_aerosol_aware,                    &
+                                  gocart_aerosol_aware,wetdep_ls_cpl,      &
                                   cplchp, cplchm, nc, nwfa2d, nifa2d,      &
                                   nwfa, nifa, tgrs, prsl, phil, area,      &
                                   aerfld, gq0, qgrs, ntdu1, ntdu2, ntdu3, ntdu4, &
@@ -89,6 +89,7 @@ module mp_thompson
          type(MPI_Comm),            intent(in   ) :: mpicomm
          integer,                   intent(in   ) :: mpirank
          integer,                   intent(in   ) :: mpiroot
+         integer,                   intent(in   ) :: wetdep_ls_cpl
          ! Threading/blocking information
          integer,                   intent(in   ) :: threads
          ! Extended diagnostics
@@ -168,6 +169,7 @@ module mp_thompson
                             gocart_aerosol_aware_in=gocart_aerosol_aware,      &
                             cplchp_in=cplchp,                                  &
                             cplchm_in=cplchm,                                  &
+                            wetdep_ls_cpl_in=wetdep_ls_cpl,                    &
                             mpicomm=mpicomm, mpirank=mpirank, mpiroot=mpiroot, &
                             threads=threads, errmsg=errmsg, errflg=errflg)
          if (errflg /= 0) return
@@ -475,10 +477,10 @@ module mp_thompson
                                 ntss1,ntss2, ntss3,  &
                                 ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
          logical, intent (in) :: cplchm, cplchp
+         integer, intent (in) :: wetdep_ls_cpl
          ! ice and liquid water 3d precipitation fluxes - only allocated if cplchm is .true.
          real(kind=kind_phys), intent(inout), dimension(:,:) :: pfi_lsan
          real(kind=kind_phys), intent(inout), dimension(:,:) :: pfl_lsan
-         integer         :: wetdep_ls_cpl
          ! Local variables
          real(kind_phys) :: aero3d(1:ncol,1:nlev,1:num_aero)
          real(kind_phys) :: aeroFF(1:ncol,1:nlev,1:num_aero)
