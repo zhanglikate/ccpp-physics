@@ -37,8 +37,8 @@ module mp_thompson
                                   imp_physics_thompson, convert_dry_rho,   &
                                   spechum, qc, qr, qi, qs, qg, ni, nr,     &
                                   is_aerosol_aware,  merra2_aerosol_aware, &
-                                  gocart_aerosol_aware,                    &
-                                  cplchp, nc, nwfa2d, nifa2d,              &
+                                  gocart_aerosol_aware,wetdep_ls_cpl,      &
+                                  cplchp, cplchm, nc, nwfa2d, nifa2d,      &
                                   nwfa, nifa, tgrs, prsl, phil, area,      &
                                   aerfld, gq0, qgrs, ntdu1, ntdu2, ntdu3, ntdu4, &
                                   ntdu5, ntss1, ntss2,ntss3, ntss4,        &
@@ -71,6 +71,7 @@ module mp_thompson
          logical,                   intent(in   ) :: merra2_aerosol_aware
          logical,                   intent(in   ) :: gocart_aerosol_aware
          logical,                   intent(in   ) :: cplchp 
+         logical,                   intent(in   ) :: cplchm 
          real(kind_phys),           intent(inout) :: nc(:,:)
          real(kind_phys),           intent(inout) :: nwfa(:,:)
          real(kind_phys),           intent(inout) :: nifa(:,:)
@@ -88,6 +89,7 @@ module mp_thompson
          type(MPI_Comm),            intent(in   ) :: mpicomm
          integer,                   intent(in   ) :: mpirank
          integer,                   intent(in   ) :: mpiroot
+         integer,                   intent(in   ) :: wetdep_ls_cpl
          ! Threading/blocking information
          integer,                   intent(in   ) :: threads
          ! Extended diagnostics
@@ -166,6 +168,8 @@ module mp_thompson
                             merra2_aerosol_aware_in=merra2_aerosol_aware,      &
                             gocart_aerosol_aware_in=gocart_aerosol_aware,      &
                             cplchp_in=cplchp,                                  &
+                            cplchm_in=cplchm,                                  &
+                            wetdep_ls_cpl_in=wetdep_ls_cpl,                    &
                             mpicomm=mpicomm, mpirank=mpirank, mpiroot=mpiroot, &
                             threads=threads, errmsg=errmsg, errflg=errflg)
          if (errflg /= 0) return
@@ -388,6 +392,7 @@ module mp_thompson
                               spp_prt_list, spp_var_list,          &
                               spp_stddev_cutoff,                   &
                               cplchm, cplchp, pfi_lsan, pfl_lsan,  &
+                              wetdep_ls_cpl,                       &
                               errmsg, errflg)
 
          implicit none
@@ -472,10 +477,10 @@ module mp_thompson
                                 ntss1,ntss2, ntss3,  &
                                 ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl
          logical, intent (in) :: cplchm, cplchp
+         integer, intent (in) :: wetdep_ls_cpl
          ! ice and liquid water 3d precipitation fluxes - only allocated if cplchm is .true.
          real(kind=kind_phys), intent(inout), dimension(:,:) :: pfi_lsan
          real(kind=kind_phys), intent(inout), dimension(:,:) :: pfl_lsan
-
          ! Local variables
          real(kind_phys) :: aero3d(1:ncol,1:nlev,1:num_aero)
          real(kind_phys) :: aeroFF(1:ncol,1:nlev,1:num_aero)
@@ -633,7 +638,7 @@ module mp_thompson
            call get_niwfa(aerfld, nifa, nwfa, ncol, nlev)
          end if
 
-         if (cplchp) then
+         if ((cplchp .or. cplchm).and. wetdep_ls_cpl == 0) then
            call get_aero(aero3d,aeroFF,gq0, gtnifa, gtnwfa, ncol, nlev, &
                  ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
                  ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl)
@@ -769,7 +774,7 @@ module mp_thompson
             qcten3     => diag3d(:,:,37:37)
          end if set_extended_diagnostic_pointers
          !> - Call mp_gt_driver() with or without aerosols, with or without effective radii, ...
-         if (((is_aerosol_aware .or. merra2_aerosol_aware)).and. (.not. cplchp)) then
+         if (((is_aerosol_aware .or. merra2_aerosol_aware)).and. (.not. (cplchp .or.cplchm))) then
             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
                               nc=nc, nwfa=nwfa, nifa=nifa, nwfa2d=nwfa2d, nifa2d=nifa2d,     &
                               tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
@@ -811,7 +816,7 @@ module mp_thompson
                               qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
                               qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
-         else if ((cplchp .and. (is_aerosol_aware .or. merra2_aerosol_aware .or.             &
+         else if (((cplchp .or.cplchm).and. (is_aerosol_aware .or. merra2_aerosol_aware .or. &
                                   gocart_aerosol_aware))) then
                   call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,  &
                               aero3d=aero3d, aeroFF=aeroFF,                                  &
@@ -855,8 +860,9 @@ module mp_thompson
                               qvten3=qvten3, qrten3=qrten3, qsten3=qsten3, qgten3=qgten3,    &
                               qiten3=qiten3, niten3=niten3, nrten3=nrten3, ncten3=ncten3,    &
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
-         else if (cplchp .and. ((.not. is_aerosol_aware) .and. (.not. merra2_aerosol_aware)  &
-                             .and.(.not. gocart_aerosol_aware)) ) then
+         else if (((cplchp.or.cplchm).and. wetdep_ls_cpl ==0 ).and. ((.not. is_aerosol_aware)&
+                              .and. (.not. merra2_aerosol_aware).and.                        &
+                              (.not.gocart_aerosol_aware)) ) then
             call mp_gt_driver(qv=qv, qc=qc, qr=qr, qi=qi, qs=qs, qg=qg, ni=ni, nr=nr,        &
                               aero3d=aero3d, aeroFF=aeroFF,                                  &   
                               tt=tgrs, p=prsl, w=w, dz=dz, dt_in=dtstep, dt_inner=dt_inner,  &
@@ -939,7 +945,7 @@ module mp_thompson
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
          end if
 
-         if (cplchp) then
+         if ((cplchp .or. cplchm).and. wetdep_ls_cpl == 0) then
            call update_aero(aero3d,gq0,ncol, nlev, &
                  ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
                  ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl )
@@ -988,8 +994,10 @@ module mp_thompson
 
          ! output instantaneous ice/snow and rain water 3d precipitation fluxes
          if(cplchm .or. cplchp) then
+           if (wetdep_ls_cpl == 1) then
            pfi_lsan(:,:) = pfils(:,:,1)
            pfl_lsan(:,:) = pflls(:,:,1)
+           endif
          end if
 
          unset_extended_diagnostic_pointers: if (ext_diag) then

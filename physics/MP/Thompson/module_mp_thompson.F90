@@ -74,9 +74,11 @@ MODULE module_mp_thompson
       LOGICAL, PRIVATE:: merra2_aerosol_aware = .false.
       LOGICAL, PRIVATE:: gocart_aerosol_aware = .false.
       LOGICAL, PRIVATE:: cplchp = .false.
+      LOGICAL, PRIVATE:: cplchm = .false.
       LOGICAL, PARAMETER, PRIVATE:: dustyIce = .true.
       LOGICAL, PARAMETER, PRIVATE:: homogIce = .true.
 !lzhang
+      integer, private :: wetdep_ls_cpl
       integer, parameter :: num_aero = 15
       character(len=5), parameter, dimension(num_aero) :: aero_species =       &
       ["dust1", "dust2", "dust3", "dust4", "dust5", "seas1", "seas2", "seas3", &
@@ -453,6 +455,8 @@ MODULE module_mp_thompson
                                merra2_aerosol_aware_in,   &
                                gocart_aerosol_aware_in,   &
                                cplchp_in,                 &
+                               cplchm_in,                 &
+                               wetdep_ls_cpl_in,          &
                                mpicomm, mpirank, mpiroot, &
                                threads, errmsg, errflg)
 
@@ -462,6 +466,8 @@ MODULE module_mp_thompson
       LOGICAL, INTENT(IN) :: merra2_aerosol_aware_in
       LOGICAL, INTENT(IN) :: gocart_aerosol_aware_in
       LOGICAL, INTENT(IN) :: cplchp_in
+      LOGICAL, INTENT(IN) :: cplchm_in
+      INTEGER, INTENT(IN) :: wetdep_ls_cpl_in
       TYPE(MPI_Comm), INTENT(IN) :: mpicomm
       INTEGER, INTENT(IN) :: mpirank, mpiroot
       INTEGER, INTENT(IN) :: threads
@@ -478,6 +484,8 @@ MODULE module_mp_thompson
       merra2_aerosol_aware = merra2_aerosol_aware_in
       gocart_aerosol_aware = gocart_aerosol_aware_in
       cplchp = cplchp_in
+      cplchm = cplchm_in
+      wetdep_ls_cpl = wetdep_ls_cpl_in
       if (is_aerosol_aware .and. merra2_aerosol_aware .and. gocart_aerosol_aware) then
           errmsg = 'Logic error in thompson_init: only one of the two options can be true, ' // &
                    'not both: is_aerosol_aware or merra2_aerosol_aware'
@@ -1230,7 +1238,7 @@ MODULE module_mp_thompson
                                   ' for merra2 aerosol-aware version of Thompson microphysics'
                stop
             end if
-         else if (gocart_aerosol_aware .and. (.not. cplchp ) .and. &
+         else if (gocart_aerosol_aware .and. (.not. (cplchp .or. cplchm) ) .and. &
                                               ( .not.present(nc) .or. &
                                               .not.present(nwfa) .or. &
                                               .not.present(nifa)      )) then
@@ -1485,7 +1493,7 @@ MODULE module_mp_thompson
                nc1d(k) = nc(i,k,j)
                nwfa1d(k) = nwfa(i,k,j)
                nifa1d(k) = nifa(i,k,j)
-              if (cplchp) then
+              if ((cplchp .or. cplchm).and. wetdep_ls_cpl==0) then
                do nv = 1, num_aero
                  naero1d(k,nv)=aero3d(i,k,j,nv)
                  aeroRT(k,nv)=aeroFF(i,k,j,nv)
@@ -1501,7 +1509,7 @@ MODULE module_mp_thompson
                endif
                nwfa1d(k) = 11.1E6
                nifa1d(k) = naIN1*0.01
-              if (cplchp) then
+              if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
               do nv = 1, num_aero
                  naero1d(k,nv)=aero3d(i,k,j,nv)
                  aeroRT(k,nv)=aeroFF(i,k,j,nv)
@@ -1593,7 +1601,7 @@ MODULE module_mp_thompson
             enddo
          endif
 
-         if (cplchp) then
+         if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
             do k = kts, kte
              do nv=1, num_aero
              aero3d(i,k,j,nv) = max(1.E-15, naero1d(k,nv))
@@ -2220,7 +2228,7 @@ MODULE module_mp_thompson
          prg_rcg(k) = 0.
          prg_ihm(k) = 0.
 
-      if (cplchp) then
+      if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
          do nv = 1, num_aero
             pnx_rcx(k,nv) = 0.
             pnx_scx(k,nv) = 0.
@@ -2321,7 +2329,7 @@ MODULE module_mp_thompson
          nifa(k) = MAX(naIN1*0.01*rho(k), MIN(9999.E6*rho(k), nifa1d(k)*rho(k)))
 
 !lzhang
-        if (cplchp) then
+        if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
 !         aero_comb(1,k) = nwfa(k)
 !         aero_comb(2,k) = nifa(k)
          do nv=1, num_aero
@@ -2673,7 +2681,7 @@ MODULE module_mp_thompson
                          *((lamr+fv_r)**(-cre(9)))
           pnd_rcd(k) = MIN(DBLE(nifa(k)*odts), pnd_rcd(k))
 
-          if (cplchp) then
+          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0 ) then
           do nv=1, num_aero
           Ef_ra = Eff_aero(mvd_r(k),aero_diams(nv),visco(k),rho(k),temp(k),'r')
           lamr = 1./ilamr(k)
@@ -2889,7 +2897,7 @@ MODULE module_mp_thompson
           pnd_scd(k) = rhof(k)*t1_qs_qc*Ef_sa*nifa(k)*smoe(k)
           pnd_scd(k) = MIN(DBLE(nifa(k)*odts), pnd_scd(k))
 
-          if (cplchp) then
+          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
           do nv=1, num_aero
           Ef_sa = Eff_aero(xDs,aero_diams(nv),visco(k),rho(k),temp(k),'s')
           !pnx_scx(k,nv) = 100.0*rhof(k)*t1_qs_qc*Ef_sa*aero_comb(k,nv)*smoe(k)
@@ -2911,7 +2919,7 @@ MODULE module_mp_thompson
                         *ilamg(k)**cge(9)
           pnd_gcd(k) = MIN(DBLE(nifa(k)*odts), pnd_gcd(k))
 
-          if (cplchp) then 
+          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then 
           do nv=1, num_aero
           Ef_ga = Eff_aero(xDg,aero_diams(nv),visco(k),rho(k),temp(k),'g')
           !pnx_gcx(k,nv) = 100.0*rhof(k)*t1_qg_qc*Ef_ga*aero_comb(k,nv)*N0_g(k) &
@@ -3372,7 +3380,7 @@ MODULE module_mp_thompson
                nifaten(k) = 0.
             endif
          endif
-         if ( cplchp ) then
+         if ( (cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
             do nv=1,num_aero
             nchemten(k,nv) = nchemten(k,nv) - (MIN(DBLE(aero_comb(k,nv)*odts),  pnx_rcx(k,nv) + pnx_scx(k,nv) &
                        + pnx_gcx(k,nv) )) * orho
@@ -4414,7 +4422,7 @@ MODULE module_mp_thompson
                          (nifa1d(k)+nifaten(k)*DT)))
          end if
 !lzhang
-         if (cplchp) then
+         if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
            do nv = 1, num_aero
                naero1d(k,nv) = naero1d(k,nv)+nchemten(k,nv)*DT !MAX(11.1E6,MIN(9999.E6,(naero1d(k,nv)+nchemten(k,nv)*DT)))
            enddo
