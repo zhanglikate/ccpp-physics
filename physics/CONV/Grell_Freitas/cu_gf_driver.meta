@@ -636,9 +636,24 @@
   type = real
   kind = kind_phys
   intent = in
+[fscav_chem]
+  standard_name = chemical_tracer_scavenging_fractions
+  long_name = array of aerosol scavenging coefficients
+  units = none
+  dimensions = (number_of_chemical_tracers)
+  type = real
+  kind = kind_phys
+  intent = in
 [do_smoke_transport]
   standard_name = do_smoke_conv_transport
   long_name = flag for rrfs smoke convective transport
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[cplchp]
+  standard_name = flag_for_chemistry_package_coupling
+  long_name = flag controlling cplchp collection (default off)
   units = flag
   dimensions = ()
   type = logical

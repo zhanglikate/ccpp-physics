@@ -17,7 +17,7 @@ module cu_gf_driver_pre
 !!
    subroutine cu_gf_driver_pre_run (flag_init, flag_restart, kdt, fhour, dtp, t, q, prevst, prevsq, &
                                     forcet, forceq, cactiv, cactiv_m, conv_act, conv_act_m,         &
-                                    rrfs_sd, ntsmoke, ntdust, ntcoarsepm, chem3d, gq0,              &
+                                    rrfs_sd, cplchp, ntsmoke, ntdust, ntcoarsepm, nchem, ntchs, chem3d, gq0,     &
                                     errmsg, errflg)
 
       use machine, only: kind_phys
@@ -27,6 +27,7 @@ module cu_gf_driver_pre
       logical,          intent(in)  :: flag_init
       logical,          intent(in)  :: flag_restart
       logical,          intent(in)  :: rrfs_sd
+      logical,          intent(in)  :: cplchp
       integer,          intent(in)  :: kdt
       real(kind_phys),  intent(in)  :: fhour
       real(kind_phys),  intent(in)  :: dtp
@@ -40,6 +41,7 @@ module cu_gf_driver_pre
       integer,          intent(out) :: cactiv(:)
       integer,          intent(out) :: cactiv_m(:)
       integer,          intent(in)  :: ntsmoke, ntdust, ntcoarsepm
+      integer,          intent(in)  :: nchem, ntchs
 !$acc declare copyout(forcet,forceq,cactiv,cactiv_m)
       real(kind_phys),  intent(in)  :: conv_act(:)
       real(kind_phys),  intent(in)  :: conv_act_m(:)
@@ -50,6 +52,7 @@ module cu_gf_driver_pre
 
       ! local variables
       real(kind=kind_phys) :: dtdyn
+      integer :: nv
 
       ! Initialize CCPP error handling variables
       errmsg = ''
@@ -87,6 +90,14 @@ module cu_gf_driver_pre
        chem3d(:,:,2) = gq0(:,:,ntdust)
        chem3d(:,:,3) = gq0(:,:,ntcoarsepm)
       endif
+  
+
+      if (cplchp) then
+        do nv=1, nchem
+         chem3d(:,:,nv) = gq0(:,:,ntchs+nv-1)
+        enddo
+      endif
+
 !$acc end kernels
 
    end subroutine cu_gf_driver_pre_run

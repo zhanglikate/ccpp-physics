@@ -158,8 +158,7 @@
 !> total+species
       integer, parameter, public :: NSPC1   = NSPC + 1
 
-      !real (kind=kind_phys), parameter :: f_zero = 0.0
-      real (kind=kind_phys), parameter :: f_zero = 1.0e-10
+      real (kind=kind_phys), parameter :: f_zero = 0.0
       real (kind=kind_phys), parameter :: f_one  = 1.0
 
 !  ---  module control parameters set in subroutine "aer_init"
@@ -4480,9 +4479,9 @@
 
           do m = 1, NBDSW
             do k = 1, NLAY
-              aerosw(i,k,m,1) = tauae(k,m)
-              aerosw(i,k,m,2) = ssaae(k,m)
-              aerosw(i,k,m,3) = asyae(k,m)
+              aerosw(i,k,m,1) = max (1.e-9, tauae(k,m))
+              aerosw(i,k,m,2) = max (1.e-9, ssaae(k,m))
+              aerosw(i,k,m,3) = max (1.e-9, asyae(k,m))
             enddo
           enddo
 
@@ -4503,18 +4502,18 @@
             m1 = NSWBND + 1
             do m = 1, NBDLW
               do k = 1, NLAY
-                aerolw(i,k,m,1) = tauae(k,m1)
-                aerolw(i,k,m,2) = ssaae(k,m1)
-                aerolw(i,k,m,3) = asyae(k,m1)
-              enddo
+                aerolw(i,k,m,1) = max (1.e-9, tauae(k,m1))
+                aerolw(i,k,m,2) = max (1.e-9, ssaae(k,m1))
+                aerolw(i,k,m,3) = max (1.e-9, asyae(k,m1))
+                enddo
             enddo
           else
             do m = 1, NBDLW
               m1 = NSWBND + m
               do k = 1, NLAY
-                aerolw(i,k,m,1) = tauae(k,m1)
-                aerolw(i,k,m,2) = ssaae(k,m1)
-                aerolw(i,k,m,3) = asyae(k,m1)
+                aerolw(i,k,m,1) = max (1.e-9, tauae(k,m1))
+                aerolw(i,k,m,2) = max (1.e-9, ssaae(k,m1))
+                aerolw(i,k,m,3) = max (1.e-9, asyae(k,m1))
               enddo
             enddo
           endif

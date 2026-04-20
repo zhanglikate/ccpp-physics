@@ -15,7 +15,7 @@ module cu_gf_driver_post
 !> \section arg_table_cu_gf_driver_post_run Argument Table
 !! \htmlinclude cu_gf_driver_post_run.html
 !!
-   subroutine cu_gf_driver_post_run (im, km, t, q, prevst, prevsq, cactiv, cactiv_m, conv_act, conv_act_m, rrfs_sd, ntsmoke, ntdust, ntcoarsepm, chem3d, gq0, errmsg, errflg)
+   subroutine cu_gf_driver_post_run (im, km, t, q, prevst, prevsq, cactiv, cactiv_m, conv_act, conv_act_m, rrfs_sd, cplchp, ntsmoke, ntdust, ntcoarsepm, nchem, ntchs, chem3d, gq0, errmsg, errflg)
 
       use machine, only: kind_phys
 
@@ -32,14 +32,16 @@ module cu_gf_driver_post
       real(kind_phys),  intent(out) :: conv_act(:)
       real(kind_phys),  intent(out) :: conv_act_m(:)
       logical,          intent(in)  :: rrfs_sd
+      logical,          intent(in)  :: cplchp
       integer,          intent(in)  :: ntsmoke, ntdust, ntcoarsepm
+      integer,          intent(in)  :: nchem, ntchs
       real(kind_phys),  intent(inout) :: chem3d(:,:,:), gq0(:,:,:)
       character(len=*), intent(out) :: errmsg
 !$acc declare copyin(t,q,cactiv,cactiv_m) copyout(prevst,prevsq,conv_act,conv_act_m,chem3d,gq0)
       integer, intent(out)          :: errflg
 
       ! Local variables
-      integer :: i, k
+      integer :: i, k, nv
 
       ! Initialize CCPP error handling variables
       errmsg = ''
@@ -67,6 +69,12 @@ module cu_gf_driver_post
        gq0(:,:,ntdust    ) = chem3d(:,:,2)
        gq0(:,:,ntcoarsepm) = chem3d(:,:,3)
       endif
+
+      if (cplchp) then
+        do nv=1, nchem
+         gq0(:,:,ntchs+nv-1) = chem3d(:,:,nv)
+        enddo
+       endif
 !$acc end kernels
 
    end subroutine cu_gf_driver_post_run

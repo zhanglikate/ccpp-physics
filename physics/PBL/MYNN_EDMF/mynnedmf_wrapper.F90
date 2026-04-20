@@ -156,8 +156,8 @@ SUBROUTINE mynnedmf_wrapper_run(        &
      &  imp_physics, imp_physics_gfdl,                     &
      &  imp_physics_thompson, imp_physics_wsm6,            &
      &  imp_physics_fa,                                    &
-     &  chem3d, frp, mix_chem, rrfs_sd, enh_mix,           &
-     &  nchem, ndvel, vdep, smoke_dbg,                     &
+     &  chem3d,gq0, frp, mix_chem, rrfs_sd,cplchp, enh_mix,    &
+     &  nchem,ntchs, ndvel, vdep, smoke_dbg,                     &
      &  imp_physics_nssl, nssl_ccn_on,                     &
      &  ltaerosol, mraerosol, gtaerosol, spp_wts_pbl,      &
      &  spp_pbl, lprnt, huge, errmsg, errflg     )
@@ -180,7 +180,7 @@ SUBROUTINE mynnedmf_wrapper_run(        &
      logical, intent(in) :: cplflx
 
      !smoke/chem
-     integer, intent(in) :: nchem, ndvel
+     integer, intent(in) :: nchem, ntchs, ndvel
      integer, parameter  :: kdvel=1
      logical, intent(in) :: smoke_dbg
 
@@ -289,8 +289,9 @@ SUBROUTINE mynnedmf_wrapper_run(        &
 
 !smoke/chem arrays
       real(kind_phys), dimension(:), intent(inout) :: frp
-      logical, intent(in) :: mix_chem, enh_mix, rrfs_sd
+      logical, intent(in) :: mix_chem, enh_mix, rrfs_sd,cplchp
       real(kind_phys), dimension(:,:,:), intent(inout) :: chem3d
+      real(kind_phys), dimension(:,:,:), intent(inout) :: gq0
       real(kind_phys), dimension(:,:  ), intent(inout) :: vdep
       real(kind_phys), dimension(im)   :: emis_ant_no
 
@@ -324,7 +325,7 @@ SUBROUTINE mynnedmf_wrapper_run(        &
      !LOCAL
       real(kind_phys), dimension(im) ::                                  &
      &        hfx,qfx,rmol,xland,uoce,voce,znt,ts
-      integer :: idtend
+      integer :: idtend,nv
       real(kind_phys), dimension(im) :: dusfci1,dvsfci1,dtsfci1,dqsfci1
       real(kind_phys), allocatable :: save_qke_adv(:,:)
       real(kind_phys), dimension(levs) :: kzero
@@ -333,12 +334,24 @@ SUBROUTINE mynnedmf_wrapper_run(        &
       errmsg = ''
       errflg = 0
 
+
+
       if (lprnt) then
          write(0,*)"=============================================="
          write(0,*)"in mynn wrapper..."
          write(0,*)"flag_init=",flag_init
          write(0,*)"flag_restart=",flag_restart
       endif
+
+   if (cplchp==cplchp) then
+     do nv=1, nchem
+     do k=1,levs
+      do i=1,im
+       chem3d(i,k,nv )= gq0(i,k,ntchs+nv-1 )
+     enddo
+    enddo
+    enddo
+   endif
 
       if (.not. flag_for_pbl_generic_tend .and. ldiag3d) then
          idtend = dtidx(ntke+100,index_of_process_pbl)
@@ -721,6 +734,7 @@ SUBROUTINE mynnedmf_wrapper_run(        &
      &             FRP=frp,EMIS_ANT_NO=emis_ant_no,                    &
      &             mix_chem=mix_chem,enh_mix=enh_mix,                  &
      &             rrfs_sd=rrfs_sd,                                    &
+     &             cplchp=cplchp,                                      &
 !-----
      &             Tsq=tsq,Qsq=qsq,Cov=cov,                            & !output
      &             RUBLTEN=RUBLTEN,RVBLTEN=RVBLTEN,RTHBLTEN=RTHBLTEN,  & !output

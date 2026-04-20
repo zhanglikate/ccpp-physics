@@ -207,7 +207,7 @@ contains
        cap_max,entr_rate,                                              &
        cap_max_increment,lambau
      integer,    dimension (its:ite)      ::                           &
-       kstabi,xland1,kbmax,ktopx
+       csum,kstabi,xland1,kbmax,ktopx
 !$acc declare create( &
 !$acc       zws,ztexec,zqexec,pre,aa1,aa0,xaa0,hkb,                         &
 !$acc       flux_tun,hkbo,xhkb,                                             &
@@ -240,6 +240,7 @@ contains
 !$acc kernels
      start_level(:)=0
      rand_vmas(:)=0.
+     csum(:)=0
      flux_tun(:)=fluxtune
      lambau(:)=2.
      c1d(:,:)=0.
@@ -494,7 +495,8 @@ contains
 !$acc end parallel
 !> - Call rates_up_pdf() to get normalized mass flux profile
       call rates_up_pdf(rand_vmas,ipr,'shallow',ktop,ierr,po_cup,entr_rate_2d,hkbo,heo,heso_cup,zo_cup, &
-           xland1,kstabi,k22,kbcon,its,ite,itf,kts,kte,ktf,zuo,kpbl,ktopx,kbcon,pmin_lev)
+                            xland1,kstabi,k22,kbcon,its,ite,itf,kts,kte,ktf,zuo,kpbl,ktop,csum)
+
 !$acc kernels
       do i=its,itf
         if(ierr(i).eq.0)then

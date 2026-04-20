@@ -935,11 +935,11 @@ module mp_thompson
                               qcten3=qcten3, pfils=pfils, pflls=pflls)
          end if
 
-         if (cplchp) then
-           call update_aero(aero3d,gq0,ncol, nlev, &
-                 ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
-                 ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl )
-         end if 
+         !if (cplchp) then
+         !  call update_aero(aero3d,gq0,ncol, nlev, &
+         !        ntdu1, ntdu2, ntdu3, ntdu4, ntdu5, ntss1, ntss2,&
+         !        ntss3, ntss4, ntss5, ntsu, ntbcb, ntbcl, ntocb, ntocl )
+         !end if 
 
          if (errflg/=0) return
 
@@ -1204,9 +1204,16 @@ module mp_thompson
             aeroFF(i,k,nt) =100.
             endif
             enddo
-            do nt =6, 15
+            do nt =6, 10
             if (aero3d(i,k,nt) >=1.e-15) then
-            aeroFF(i,k,nt)=nwfa(i,k)/aero3d(i,k,nt)
+            aeroFF(i,k,nt)=2.0*nwfa(i,k)/aero3d(i,k,nt)
+            else
+            aeroFF(i,k,nt) =100.
+            endif
+            enddo
+            do nt =11, 15
+            if (aero3d(i,k,nt) >=1.e-15) then
+            aeroFF(i,k,nt)=2.0*nwfa(i,k)/aero3d(i,k,nt)
             else
             aeroFF(i,k,nt) =100.
             endif
@@ -1216,7 +1223,7 @@ module mp_thompson
          aeroFF(i,k,14)=100.
           enddo
          enddo
-          aeroFF=100.  ! lzhang, removal factor
+          !aeroFF=100.  ! lzhang, removal factor
       end subroutine get_aero
 
       subroutine update_aero(aero3d,aerfld,ncol, nlev,           &

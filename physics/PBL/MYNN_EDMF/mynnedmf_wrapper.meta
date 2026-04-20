@@ -1391,6 +1391,14 @@
   type = real
   kind = kind_phys
   intent = inout
+[gq0]
+  standard_name = tracer_concentration_of_new_state
+  long_name = tracer concentration updated by physics
+  units = kg kg-1
+  dimensions = (horizontal_loop_extent,vertical_layer_dimension,number_of_tracers)
+  type = real
+  kind = kind_phys
+  intent = inout
 [frp]
   standard_name = frp_hourly
   long_name = hourly fire radiative power
@@ -1402,6 +1410,13 @@
 [rrfs_sd]
   standard_name = do_smoke_coupling
   long_name = flag controlling rrfs_sd collection (default off)
+  units = flag
+  dimensions = ()
+  type = logical
+  intent = in
+[cplchp]
+  standard_name = flag_for_chemistry_package_coupling
+  long_name = flag controlling cplchp collection (default off)
   units = flag
   dimensions = ()
   type = logical
@@ -1424,6 +1439,13 @@
   standard_name = number_of_chemical_species_vertically_mixed
   long_name = number of chemical vertically mixed
   units = count
+  dimensions = ()
+  type = integer
+  intent = in
+[ntchs]
+  standard_name = index_of_first_chemical_tracer_in_tracer_concentration_array
+  long_name = tracer index for first chemical tracer
+  units = index
   dimensions = ()
   type = integer
   intent = in

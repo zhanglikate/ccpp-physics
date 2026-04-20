@@ -612,6 +612,8 @@ c
             if (k <= kmax(i)) then
               ctr(i,k,kk)  = qtr(i,k,n)
               ctro(i,k,kk) = qtr(i,k,n)
+              if((ctro(i,k,kk)) .lt. 0. .and. (kk > 10) ) then
+              endif
               ecko(i,k,kk) = 0.
               ercko(i,k,kk) = 0.
               ecdo(i,k,kk) = 0.

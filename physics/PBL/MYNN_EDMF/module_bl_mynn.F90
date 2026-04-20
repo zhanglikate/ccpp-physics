@@ -372,7 +372,7 @@ CONTAINS
        &nchem,kdvel,ndvel,              & !Smoke/Chem variables
        &chem3d,vdep,smoke_dbg,          &
        &frp,emis_ant_no,                & ! JLS/RAR to adjust exchange coeffs
-       &mix_chem,enh_mix,rrfs_sd,       & ! end smoke/chem variables
+       &mix_chem,enh_mix,rrfs_sd,cplchp,& ! end smoke/chem variables
        &tsq,qsq,cov,                    &
        &rublten,rvblten,rthblten,       &
        &rqvblten,rqcblten,rqiblten,     &
@@ -435,7 +435,7 @@ CONTAINS
                            FLAG_QNWFA,FLAG_QNIFA,FLAG_QNBCA, &
                            FLAG_OZONE,FLAG_QS
 
-    logical, intent(in) :: mix_chem,enh_mix,rrfs_sd,smoke_dbg
+    logical, intent(in) :: mix_chem,enh_mix,rrfs_sd,cplchp,smoke_dbg
 
     integer, intent(in) ::                                   &
                          & IDS,IDE,JDS,JDE,KDS,KDE           &
@@ -1018,7 +1018,11 @@ CONTAINS
        !initialize smoke/chem arrays (if used):
        if ( mix_chem ) then
           do ic = 1,ndvel
+             if (cplchp) then
+                      vd1(ic) = 0.
+              else         
              vd1(ic) = vdep(i,ic) ! dry deposition velocity
+              endif
           enddo
           do k = kts,kte
              do ic = 1,nchem
@@ -1275,7 +1279,7 @@ CONTAINS
 
 
        if ( mix_chem ) then
-          if ( rrfs_sd ) then 
+          if ( rrfs_sd .or. cplchp ) then 
              call mynn_mix_chem(kts,kte,i,               &
                   &delt, dz1, pblh(i),                   &
                   &nchem, kdvel, ndvel,                  &
@@ -1285,7 +1289,7 @@ CONTAINS
                   &dfh,                                  &
                   &s_aw1,s_awchem1,                      &
                   &emis_ant_no(i),                       &
-                  &frp(i), rrfs_sd,                      &
+                  &frp(i), rrfs_sd, cplchp,              &
                   &enh_mix, smoke_dbg                    )
           else
              call mynn_mix_chem(kts,kte,i,               &
@@ -1297,7 +1301,7 @@ CONTAINS
                   &dfh,                                  &
                   &s_aw1,s_awchem1,                      &
                   &zero,                                 &
-                  &zero, rrfs_sd,                        &
+                  &zero, rrfs_sd, cplchp,                &
                   &enh_mix, smoke_dbg                    )
           endif
           do ic = 1,nchem
@@ -5228,7 +5232,7 @@ ENDIF
        flt, tcd, qcd,                     &
        dfh,                               &
        s_aw, s_awchem,                    &
-       emis_ant_no, frp, rrfs_sd,         &
+       emis_ant_no, frp, rrfs_sd,cplchp,  &
        enh_mix, smoke_dbg                 )
 
 !-------------------------------------------------------------------
@@ -5243,7 +5247,7 @@ ENDIF
     real(kind_phys), dimension( kts:kte+1,nchem), intent(in) :: s_awchem
     real(kind_phys), dimension( ndvel ), intent(in) :: vd1
     real(kind_phys), intent(in) :: emis_ant_no,frp
-    logical, intent(in) :: rrfs_sd,enh_mix,smoke_dbg
+    logical, intent(in) :: rrfs_sd,cplchp,enh_mix,smoke_dbg
 !local vars
 
     real(kind_phys), dimension(kts:kte)     :: dtz
