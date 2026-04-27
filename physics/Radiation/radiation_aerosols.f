@@ -4481,7 +4481,7 @@
             do k = 1, NLAY
               aerosw(i,k,m,1) = max (1.e-10,tauae(k,m))
               aerosw(i,k,m,2) = ssaae(k,m)
-              aerosw(i,k,m,3) = max (1.e-10, asyae(k,m))
+              aerosw(i,k,m,3) = asyae(k,m)
             enddo
           enddo
 
@@ -4504,7 +4504,7 @@
               do k = 1, NLAY
                 aerolw(i,k,m,1) = max (1.e-10, tauae(k,m1))
                 aerolw(i,k,m,2) = ssaae(k,m1)
-                aerolw(i,k,m,3) = max (1.e-10, asyae(k,m1))
+                aerolw(i,k,m,3) = asyae(k,m1)
               enddo
             enddo
           else
@@ -4513,7 +4513,7 @@
               do k = 1, NLAY
                 aerolw(i,k,m,1) = max (1.e-10, tauae(k,m1))
                 aerolw(i,k,m,2) = ssaae(k,m1)
-                aerolw(i,k,m,3) = max (1.e-10, asyae(k,m1))
+                aerolw(i,k,m,3) = asyae(k,m1)
               enddo
             enddo
           endif

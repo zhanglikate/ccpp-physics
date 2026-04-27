@@ -1493,7 +1493,7 @@ MODULE module_mp_thompson
                nc1d(k) = nc(i,k,j)
                nwfa1d(k) = nwfa(i,k,j)
                nifa1d(k) = nifa(i,k,j)
-              if ((cplchp .or. cplchm).and. wetdep_ls_cpl) then
+              if ((cplchp .or. cplchm).and. wetdep_ls_cpl==0) then
                do nv = 1, num_aero
                  naero1d(k,nv)=aero3d(i,k,j,nv)
                  aeroRT(k,nv)=aeroFF(i,k,j,nv)
@@ -1509,7 +1509,7 @@ MODULE module_mp_thompson
                endif
                nwfa1d(k) = 11.1E6
                nifa1d(k) = naIN1*0.01
-              if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+              if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
               do nv = 1, num_aero
                  naero1d(k,nv)=aero3d(i,k,j,nv)
                  aeroRT(k,nv)=aeroFF(i,k,j,nv)
@@ -1601,7 +1601,7 @@ MODULE module_mp_thompson
             enddo
          endif
 
-         if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+         if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
             do k = kts, kte
              do nv=1, num_aero
              aero3d(i,k,j,nv) = max(1.E-15, naero1d(k,nv))
@@ -2228,7 +2228,7 @@ MODULE module_mp_thompson
          prg_rcg(k) = 0.
          prg_ihm(k) = 0.
 
-      if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+      if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
          do nv = 1, num_aero
             pnx_rcx(k,nv) = 0.
             pnx_scx(k,nv) = 0.
@@ -2329,7 +2329,7 @@ MODULE module_mp_thompson
          nifa(k) = MAX(naIN1*0.01*rho(k), MIN(9999.E6*rho(k), nifa1d(k)*rho(k)))
 
 !lzhang
-        if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+        if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
 !         aero_comb(1,k) = nwfa(k)
 !         aero_comb(2,k) = nifa(k)
          do nv=1, num_aero
@@ -2681,7 +2681,7 @@ MODULE module_mp_thompson
                          *((lamr+fv_r)**(-cre(9)))
           pnd_rcd(k) = MIN(DBLE(nifa(k)*odts), pnd_rcd(k))
 
-          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl ) then
+          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0 ) then
           do nv=1, num_aero
           Ef_ra = Eff_aero(mvd_r(k),aero_diams(nv),visco(k),rho(k),temp(k),'r')
           lamr = 1./ilamr(k)
@@ -2897,7 +2897,7 @@ MODULE module_mp_thompson
           pnd_scd(k) = rhof(k)*t1_qs_qc*Ef_sa*nifa(k)*smoe(k)
           pnd_scd(k) = MIN(DBLE(nifa(k)*odts), pnd_scd(k))
 
-          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
           do nv=1, num_aero
           Ef_sa = Eff_aero(xDs,aero_diams(nv),visco(k),rho(k),temp(k),'s')
           !pnx_scx(k,nv) = 100.0*rhof(k)*t1_qs_qc*Ef_sa*aero_comb(k,nv)*smoe(k)
@@ -2919,7 +2919,7 @@ MODULE module_mp_thompson
                         *ilamg(k)**cge(9)
           pnd_gcd(k) = MIN(DBLE(nifa(k)*odts), pnd_gcd(k))
 
-          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then 
+          if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then 
           do nv=1, num_aero
           Ef_ga = Eff_aero(xDg,aero_diams(nv),visco(k),rho(k),temp(k),'g')
           !pnx_gcx(k,nv) = 100.0*rhof(k)*t1_qg_qc*Ef_ga*aero_comb(k,nv)*N0_g(k) &
@@ -3380,7 +3380,7 @@ MODULE module_mp_thompson
                nifaten(k) = 0.
             endif
          endif
-         if ( (cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+         if ( (cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
             do nv=1,num_aero
             nchemten(k,nv) = nchemten(k,nv) - (MIN(DBLE(aero_comb(k,nv)*odts),  pnx_rcx(k,nv) + pnx_scx(k,nv) &
                        + pnx_gcx(k,nv) )) * orho
@@ -4422,7 +4422,7 @@ MODULE module_mp_thompson
                          (nifa1d(k)+nifaten(k)*DT)))
          end if
 !lzhang
-         if ((cplchp .or. cplchm) .and. wetdep_ls_cpl) then
+         if ((cplchp .or. cplchm) .and. wetdep_ls_cpl==0) then
            do nv = 1, num_aero
                naero1d(k,nv) = naero1d(k,nv)+nchemten(k,nv)*DT !MAX(11.1E6,MIN(9999.E6,(naero1d(k,nv)+nchemten(k,nv)*DT)))
            enddo

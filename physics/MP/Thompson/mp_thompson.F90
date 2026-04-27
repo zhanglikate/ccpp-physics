@@ -994,12 +994,12 @@ module mp_thompson
 
          ! output instantaneous ice/snow and rain water 3d precipitation fluxes
          if(cplchm .or. cplchp) then
+           if (wetdep_ls_cpl == 1) then
            pfi_lsan(:,:) = pfils(:,:,1)
            pfl_lsan(:,:) = pflls(:,:,1)
-           if (wetdep_ls_cpl == 0) then
-                   pfi_lsan(:,:) =0.
-                   pfl_lsan(:,:) =0.
-           endif
+           elseif (wetdep_ls_cpl == 0) then
+           pfi_lsan(:,:) = 0.
+           pfl_lsan(:,:) = 0.
          end if
 
          unset_extended_diagnostic_pointers: if (ext_diag) then
