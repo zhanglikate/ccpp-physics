@@ -248,30 +248,31 @@
 
 !> - Call read_aerdata() to read aerosol climatology, Anning added coupled
 !>  added coupled gocart and radiation option to initializing aer_nm
-         if (iaerclm .or.mraerosol ) then
+         if (iaerclm .and. iaermdl .ne. 2) then
            ntrcaer = ntrcaerm
            myerrflg = 0
            myerrmsg = 'read_aerdata failed without a message'
            call read_aerdata (me,master,iflip,idate,myerrmsg,myerrflg)
            call copy_error(myerrmsg, myerrflg, errmsg, errflg)
-         endif
-
-          if(iaermdl ==2 ) then
+         else if(iaermdl ==2 ) then
+                 if (mraerosol) then
+                              ntrcaer = ntrcaerm
+           myerrflg = 0
+           myerrmsg = 'read_aerdata failed without a message'
+           call read_aerdata (me,master,iflip,idate,myerrmsg,myerrflg)
+           call copy_error(myerrmsg, myerrflg, errmsg, errflg)
+                 endif
 
            do ix=1,ntrcaerm
              do j=1,levs
                do i=1,im
                  aer_nm(i,j,ix) = 1.e-20_kind_phys
-                 if (mraerosol) then
                  aer_mr(i,j,ix) = 1.e-20_kind_phys
-                 endif
                end do
              end do
            end do
            ntrcaer = ntrcaerm
-           endif
-
-         if ((.not. iaerclm) .and. (iaermdl .ne.2))then
+         else
            ntrcaer = 1
          endif
 
@@ -318,7 +319,7 @@
          endif
 
 !> - Call setindxaer() to initialize aerosols data
-         if (iaerclm) then
+         if (iaerclm .or.  mraerosol) then
            call setindxaer (im, xlat_d, jindx1_aer,          &
                             jindx2_aer, ddy_aer, xlon_d,     &
                             iindx1_aer, iindx2_aer, ddx_aer, &
@@ -382,7 +383,7 @@
 
          if (errflg/=0) return
 
-         if (iaerclm  ) then
+         if (iaerclm .or. mraerosol ) then
            ! This call is outside the OpenMP section, so it should access errmsg & errflg directly.
            call read_aerdataf (me, master, iflip, idate, fhour, errmsg, errflg)
            ! If it is moved to an OpenMP section, it must use myerrmsg, myerrflg, and copy_error.
@@ -935,7 +936,7 @@
 !$OMP end parallel
 
 !> - Call aerinterpol() to make aerosol interpolation
-         if (iaerclm) then
+         if (iaerclm .or.  mraerosol) then
            ! aerinterpol is using threading inside, don't
            ! move into OpenMP parallel section above
            call aerinterpol (me, master, nthrds, im, idate, &
