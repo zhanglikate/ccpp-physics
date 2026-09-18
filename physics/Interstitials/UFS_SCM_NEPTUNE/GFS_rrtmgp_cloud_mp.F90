@@ -262,7 +262,8 @@ contains
        ! Update particle size using modified mixing-ratios from Thompson.
        call cmp_reff_Thompson(nLev, nCol, i_cldliq, i_cldice, i_cldsnow, i_cldice_nc,   &
             i_cldliq_nc, i_twa, q_lay, p_lay, t_lay, tracer, con_eps, con_rd, ltaerosol,&
-            mraerosol, gtaerosol, lsmask,  effrin_cldliq, effrin_cldice, effrin_cldsnow)
+            mraerosol, gtaerosol, lsmask,  effrin_cldliq, effrin_cldice, effrin_cldsnow,
+            ntss1, ntss2,ntss3,ntss4, ntss5, ntsu,ntocl)
        cld_reliq  = effrin_cldliq
        cld_reice  = effrin_cldice
        cld_resnow = effrin_cldsnow
@@ -881,7 +882,7 @@ contains
           qi_mp(iCol,iLay) = tracer(iCol,iLay,i_cldice)    / (1.-q_lay(iCol,iLay))
           qs_mp(iCol,iLay) = tracer(iCol,iLay,i_cldsnow)   / (1.-q_lay(iCol,iLay))
           ni_mp(iCol,iLay) = tracer(iCol,iLay,i_cldice_nc) / (1.-q_lay(iCol,iLay))
-          if (ltaerosol .or. mraerosol .or. gtaerosol,) then
+          if (ltaerosol .or. mraerosol .or. gtaerosol) then
              nc_mp(iCol,iLay) = tracer(iCol,iLay,i_cldliq_nc) / (1.-q_lay(iCol,iLay))
             if (gtaerosol) then
              nwfa(iCol,iLay) = max(1.e-15, ((tracer(iCol,iLay,ntss1)/0.0045435214+tracer(iCol,iLay,ntss2)/0.2907854+tracer(iCol,iLay,ntss3)/12.91224+ &
