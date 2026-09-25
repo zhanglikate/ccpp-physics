@@ -12,7 +12,8 @@
       contains
 
       subroutine set_aerosol_tracer_index(imp_physics, imp_physics_wsm6,          &
-                                          imp_physics_thompson, ltaerosol,mraerosol,   &
+                                          imp_physics_thompson,ltaerosol,         &
+                                          mraerosol,gtaerosol,                    &
                                           imp_physics_mg, ntgl, imp_physics_gfdl, &
                                           imp_physics_nssl,                       &
                                           nssl_hail_on, nssl_ccn_on, nssl_3moment, kk, &
@@ -23,7 +24,7 @@
                                        imp_physics_thompson,                   &
                                        imp_physics_mg, ntgl, imp_physics_gfdl, &
                                        imp_physics_nssl
-      logical, intent(in )          :: ltaerosol, mraerosol, nssl_hail_on, nssl_ccn_on, nssl_3moment
+      logical, intent(in )          :: ltaerosol, mraerosol, gtaerosol, nssl_hail_on, nssl_ccn_on, nssl_3moment
       integer, intent(out)          :: kk
       character(len=*), intent(out) :: errmsg
       integer, intent(out)          :: errflg
@@ -38,7 +39,7 @@
 ! Thompson
         if(ltaerosol) then
           kk = 12
-        else if(mraerosol) then
+        else if(mraerosol .or. gtaerosol) then
           kk = 10
         else
           kk = 9
